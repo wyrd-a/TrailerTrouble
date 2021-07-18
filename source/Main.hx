@@ -1,9 +1,5 @@
 package;
 
-// Internal imporrts
-import states.StartState;
-
-// External imports
 import flixel.FlxGame;
 import openfl.display.Sprite;
 

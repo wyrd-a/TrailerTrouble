@@ -1,4 +1,4 @@
-package states;
+package;
 
 import js.html.AbortController;
 import flixel.animation.FlxBaseAnimation;
@@ -16,8 +16,8 @@ import flixel.effects.particles.FlxParticle;
 class PlayState extends FlxState
 {
 	var player:Player;
-
 	var trailer:Trailer;
+
 	var WINDIST:Float = 100000;
 
 	// Particle effects
@@ -32,6 +32,7 @@ class PlayState extends FlxState
 	var MAXTIME:Float = 180; // In seconds
 	var currentTime:Float = 0; // Keep track of time
 	var timerDisp:FlxText; // Display at the top
+
 	// Box positioning variables
 	var playerHealth:Int = 4;
 	var boxOne:Boxes;
@@ -82,7 +83,6 @@ class PlayState extends FlxState
 		add(leftBumper);
 		rightBumper = new Bumpers(597, 0);
 		add(rightBumper);
-
 		// Background
 		var bg:FlxBackdrop = new FlxBackdrop(AssetPaths.road__png, 1, 1, true, true);
 		add(bg);
@@ -116,9 +116,9 @@ class PlayState extends FlxState
 		car.kill();
 
 		// Roadsigns
-		for (i in 0...20) // Just testing how the signs look at speed
+		for (i in 0...50) // Just testing how the signs look at speed
 		{
-			RoadSign[i] = new RoadSigns(0, -2000 * i);
+			RoadSign[i] = new RoadSigns(723, -360 * i);
 			add(RoadSign[i]);
 			trace(i);
 		}
@@ -129,9 +129,11 @@ class PlayState extends FlxState
 		add(sparks);
 		sparks.start(false, .01);
 
-		carExplode = new FlxEmitter(10, 10, 200);
-		carExplode.makeParticles(10, 10, FlxColor.ORANGE, 200);
+		carExplode = new FlxEmitter(2, 2, 400);
+		carExplode.makeParticles(4, 4, FlxColor.ORANGE, 400);
+		carExplode.speed.set(25, 800, 100, 425);
 		add(carExplode);
+		carExplode.color.set(0xf9c22b, 0xf79617, 0xffffff);
 
 		// Timer
 		timerDisp = new FlxText(0, 0);
@@ -177,9 +179,9 @@ class PlayState extends FlxState
 		spawnCars(); // Spawn some cars
 		healthCheck();
 
-		bumperUpdate();
-
 		super.update(elapsed);
+
+		bumperUpdate();
 
 		// Note: This block HAS to be in this order
 		// Gotta move the player, then the trailer, then the boxes
@@ -187,11 +189,28 @@ class PlayState extends FlxState
 		// player.velocity.rotate(FlxPoint.weak(0, 0), player.angle);
 		trailerHitch(); // Update trailer angle
 		trailerPosition();
+
 		// Move boxes to be on trailer
-		boxPos(boxOne, boxOnePoint);
-		boxPos(boxTwo, boxTwoPoint);
-		boxPos(boxThree, boxThreePoint);
-		boxPos(boxFour, boxFourPoint);
+		if (playerHealth > 0)
+		{
+			boxPos(boxOne, boxOnePoint);
+		}
+		if (playerHealth > 1)
+		{
+			boxPos(boxTwo, boxTwoPoint);
+		}
+		if (playerHealth > 2)
+		{
+			boxPos(boxThree, boxThreePoint);
+		}
+		if (playerHealth > 3)
+		{
+			boxPos(boxFour, boxFourPoint);
+		}
+		boxKiller(boxOne);
+		boxKiller(boxTwo);
+		boxKiller(boxThree);
+		boxKiller(boxFour);
 
 		winGame(); // Check to see if player is at required distance
 	}
@@ -303,19 +322,20 @@ class PlayState extends FlxState
 	{
 		if (playerHealth <= 0)
 		{
+			boxSpin(boxOne);
 			FlxG.switchState(new LoseState());
 		}
 		else if (playerHealth == 1)
 		{
-			boxTwo.kill();
+			boxSpin(boxTwo);
 		}
 		else if (playerHealth == 2)
 		{
-			boxThree.kill();
+			boxSpin(boxThree);
 		}
 		else if (playerHealth == 3)
 		{
-			boxFour.kill();
+			boxSpin(boxFour);
 		}
 	}
 
@@ -347,7 +367,7 @@ class PlayState extends FlxState
 		}
 	}
 
-	function bumperUpdate() // Need to make it so bumpers don't move in the x direction ;)
+	function bumperUpdate()
 	{
 		FlxG.worldBounds.set();
 		leftBumper.immovable = true;
@@ -357,23 +377,37 @@ class PlayState extends FlxState
 		{
 			// leftBumper.color = FlxColor.BLUE;
 			sparks.emitting = true;
-			sparks.x = leftBumper.x + 20;
+			sparks.x = player.x;
 			sparks.y = player.y + 10;
 		}
 		else if (FlxG.collide(player, rightBumper))
 		{
-			// rightBumper.color = FlxColor.BLUE;
+			rightBumper.color = FlxColor.WHITE;
 			sparks.emitting = true;
-			sparks.x = rightBumper.x;
+			sparks.x = player.x + player.width;
 			sparks.y = player.y + 10;
 		}
 		else
 		{
-			// rightBumper.color = FlxColor.RED;
+			rightBumper.color = FlxColor.GREEN;
 			// leftBumper.color = FlxColor.RED;
 			sparks.emitting = false;
 		}
 		rightBumper.y = player.y - 100;
 		leftBumper.y = player.y - 100;
+	}
+
+	function boxSpin(box:Boxes) // Use when killing boxes
+	{
+		box.angularVelocity = 900;
+		box.velocity.set(100 * Std.random(5), -100 * Math.random());
+	}
+
+	function boxKiller(box:Boxes)
+	{
+		if (box.y > player.y + 800)
+		{
+			box.kill();
+		}
 	}
 }

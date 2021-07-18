@@ -18,9 +18,9 @@ class Player extends FlxSprite
 	override public function update(elapsed:Float)
 	{
 		updateMovement();
-		// keepOnRoad();
 		noReverse();
 		hitboxResize();
+		keepOnRoad();
 		super.update(elapsed);
 	}
 
@@ -97,13 +97,13 @@ class Player extends FlxSprite
 
 	function keepOnRoad()
 	{
-		if (x + 74 > 597)
+		if (x + width > 597)
 		{
-			x = 597 - 74;
+			x = 597 - width;
 		}
-		else if (x < 200)
+		else if (x < 199)
 		{
-			x = 200;
+			x = 199;
 		}
 	}
 
@@ -124,13 +124,6 @@ class Player extends FlxSprite
 		var w1:Float = 74;
 		var h1:Float = 162;
 		width = 89 * Math.sin(Math.abs(angle) / 180 * Math.PI) + w1;
-		if (angle > 0)
-		{
-			offset.x = -(width - w1) / 2;
-		}
-		else
-		{
-			offset.x = -(width - w1) / 2;
-		}
+		offset.x = -(width - w1) / 2;
 	}
 }
