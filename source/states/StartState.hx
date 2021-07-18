@@ -1,7 +1,5 @@
 package states;
 
-// Internal imports
-
 // External imports
 import flixel.FlxG;
 import flixel.FlxState;
@@ -14,19 +12,15 @@ class StartState extends FlxState
 	override public function create():Void
 	{
 		super.create();
-		var startBG = new FlxSprite(0, 0);
+		var startBg = new FlxSprite(0, 0);
+		startBg.loadGraphic(AssetPaths.startScreen__png);
 
-		startBG.loadGraphic(AssetPaths.startScreen__png);
-		add(startBG);
+		var startButton = new FlxButton(0, 0, "Start", clickStart);
+		startButton.screenCenter();
 
-		var startButton = new FlxButton(300, 400, "Start", clickStart);
+		add(startBg);
 		add(startButton);
 	}
-
-	// override public function update(elapsed:Float):Void
-	// {
-	// 	super.update(elapsed);
-	// }
 
 	function clickStart()
 	{
