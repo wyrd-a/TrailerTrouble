@@ -51,13 +51,14 @@ class PlayState extends FlxState
 
 	// Car variables
 	var car:Array<Cars> = new Array();
-	var carMax:Int = 3; // Increment this value over distance to make game harder
+	var carMax:Int = 20; // Increment this value over distance to make game harder
 	var carTotal:Int = 0;
 	var carSpawnX:Int;
 	var chooseLane:Int;
 	var chooseVehicle:Int;
 	var furthestCar:Float;
 	var isImmune:Bool;
+	var chooseDist:Int;
 
 	// Bumpers
 	var leftBumper:Bumpers;
@@ -229,7 +230,7 @@ class PlayState extends FlxState
 		}
 		for (i in 0...carMax)
 		{
-			if (!car[i].alive && furthestCar > player.y - 400) // 190, 324, 440
+			if (!car[i].alive && furthestCar > player.y - 400) // Spaces cars properly
 			{
 				// Choose lane for car to drive in
 				chooseLane = Std.random(3);
@@ -246,8 +247,21 @@ class PlayState extends FlxState
 					carSpawnX = 440 + 50;
 				}
 
+				chooseDist = Std.random(3);
+				if (chooseDist == 0)
+				{
+					chooseDist = 900;
+				}
+				else if (chooseDist == 1)
+				{
+					chooseDist = 850;
+				}
+				else
+				{
+					chooseDist = 800;
+				}
 				// Spawn car offscreen in front of player in a lane
-				car[i].reset(carSpawnX, player.y - 800);
+				car[i].reset(carSpawnX, player.y - chooseDist);
 				chooseVehicle = Std.random(Cars.vehicles.length);
 				car[i].loadGraphic("assets/images/" + Cars.vehicles[chooseVehicle] + ".png");
 				carTotal += 1;
