@@ -50,12 +50,14 @@ class PlayState extends FlxState
 	var BOXSPACING = 15;
 
 	// Car variables
-	var car:Cars;
-	var carMax:Int = 1;
+	var car:Array<Cars> = new Array();
+	var carMax:Int = 3; // Increment this value over distance to make game harder
 	var carTotal:Int = 0;
 	var carSpawnX:Int;
 	var chooseLane:Int;
 	var chooseVehicle:Int;
+	var furthestCar:Float;
+	var isImmune:Bool;
 
 	// Bumpers
 	var leftBumper:Bumpers;
@@ -111,14 +113,17 @@ class PlayState extends FlxState
 		add(boxFour);
 
 		// Test car
-		car = new Cars(324, -500);
-		add(car);
-		car.kill();
+		for (i in 0...carMax)
+		{
+			car[i] = new Cars(1000, -500);
+			add(car[i]);
+			car[i].kill();
+		}
 
 		// Roadsigns
 		for (i in 0...50) // Just testing how the signs look at speed
 		{
-			RoadSign[i] = new RoadSigns(723, -360 * i);
+			RoadSign[i] = new RoadSigns(700, -360 * i);
 			add(RoadSign[i]);
 			trace(i);
 		}
@@ -170,8 +175,6 @@ class PlayState extends FlxState
 		distDisp.x = 0;
 		speedDisp.x = 0;
 
-		carCollide();
-
 		// Camera testing
 		FlxG.camera.scroll.x = 0;
 		FlxG.camera.scroll.y = player.y - 450;
@@ -181,12 +184,10 @@ class PlayState extends FlxState
 
 		super.update(elapsed);
 
+		carCollide();
+
 		bumperUpdate();
 
-		// Note: This block HAS to be in this order
-		// Gotta move the player, then the trailer, then the boxes
-		// player.velocity.set(0, -1 * Player.speed);
-		// player.velocity.rotate(FlxPoint.weak(0, 0), player.angle);
 		trailerHitch(); // Update trailer angle
 		trailerPosition();
 
@@ -218,28 +219,40 @@ class PlayState extends FlxState
 	// Make cars within range of the player
 	function spawnCars()
 	{
-		if (!car.alive) // 190, 324, 440
+		furthestCar = 0;
+		for (i in 0...carMax)
 		{
-			// Choose lane for car to drive in
-			chooseLane = Std.random(3);
-			if (chooseLane == 0)
+			if (furthestCar > car[i].y)
 			{
-				carSpawnX = 190 + 50;
+				furthestCar = car[i].y;
 			}
-			else if (chooseLane == 1)
+		}
+		for (i in 0...carMax)
+		{
+			if (!car[i].alive && furthestCar > player.y - 400) // 190, 324, 440
 			{
-				carSpawnX = 324 + 50;
-			}
-			else
-			{
-				carSpawnX = 440 + 50;
-			}
+				// Choose lane for car to drive in
+				chooseLane = Std.random(3);
+				if (chooseLane == 0)
+				{
+					carSpawnX = 190 + 50;
+				}
+				else if (chooseLane == 1)
+				{
+					carSpawnX = 400 - Std.int(car[i].width / 2); // Center point minus half the width (to position left corner)
+				}
+				else
+				{
+					carSpawnX = 440 + 50;
+				}
 
-			// Spawn car offscreen in front of player in a lane
-			car.reset(carSpawnX, player.y - 800);
-			chooseVehicle = Std.random(Cars.vehicles.length);
-			car.loadGraphic("assets/images/" + Cars.vehicles[chooseVehicle] + ".png");
-			carTotal += 1;
+				// Spawn car offscreen in front of player in a lane
+				car[i].reset(carSpawnX, player.y - 800);
+				chooseVehicle = Std.random(Cars.vehicles.length);
+				car[i].loadGraphic("assets/images/" + Cars.vehicles[chooseVehicle] + ".png");
+				carTotal += 1;
+				furthestCar = car[i].y;
+			}
 		}
 	}
 
@@ -286,24 +299,34 @@ class PlayState extends FlxState
 
 	function carCollide()
 	{
-		// "May be slow, so use it sparingly." - FlxCollision documentation
-		// Call it every frame! lmao
-		if (FlxCollision.pixelPerfectCheck(player, car) || FlxCollision.pixelPerfectCheck(trailer, car))
+		isImmune = false;
+		for (i in 0...carMax)
 		{
-			car.kill();
-			playerHealth -= 1;
-			carTotal -= 1;
+			// "May be slow, so use it sparingly." - FlxCollision documentation
+			// Call it every frame! lmao
+			if (!isImmune
+				&& car[i].alive
+				&& (FlxCollision.pixelPerfectCheck(player, car[i]) || FlxCollision.pixelPerfectCheck(trailer, car[i])))
+			{
+				car[i].kill();
+				isImmune = true;
+				carTotal -= 1;
 
-			// Particle explosion
-			carExplode.x = car.x + 30;
-			carExplode.y = car.y + 40;
-			carExplode.start(true, 0, 0);
+				// Particle explosion
+				carExplode.x = car[i].x + 30;
+				carExplode.y = car[i].y + 40;
+			}
+			// Check to see if car is passed offscreen
+			else if (car[i].y > player.y + 800)
+			{
+				car[i].kill();
+				carTotal -= 1;
+			}
 		}
-		// Check to see if car is passed offscreen
-		else if (car.y > player.y + 800)
+		if (isImmune) // Check if car hit
 		{
-			car.kill();
-			carTotal -= 1;
+			carExplode.start(true, 0, 0);
+			playerHealth -= 1;
 		}
 	}
 
