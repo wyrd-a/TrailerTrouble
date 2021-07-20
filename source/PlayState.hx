@@ -181,6 +181,7 @@ class PlayState extends FlxState
 		FlxG.camera.scroll.y = player.y - 450;
 
 		spawnCars(); // Spawn some cars
+		preventCarsFromHittingEachother(); // This one does something, not quite sure what
 		healthCheck();
 
 		super.update(elapsed);
@@ -240,7 +241,7 @@ class PlayState extends FlxState
 				}
 				else if (chooseLane == 1)
 				{
-					carSpawnX = 400 - Std.int(car[i].width / 2); // Center point minus half the width (to position left corner)
+					carSpawnX = 400; // we'll try to center point minus half the width (to position left corner)
 				}
 				else
 				{
@@ -262,11 +263,24 @@ class PlayState extends FlxState
 				}
 				// Spawn car offscreen in front of player in a lane
 				car[i].reset(carSpawnX, player.y - chooseDist);
+				car[i].velocity.set(0, -100 * Std.random(3) - 600);
 				chooseVehicle = Std.random(Cars.vehicles.length);
 				car[i].loadGraphic("assets/images/" + Cars.vehicles[chooseVehicle] + ".png");
 				carTotal += 1;
 				furthestCar = car[i].y;
 			}
+		}
+	}
+
+	function preventCarsFromHittingEachother()
+	{
+		for (i in 0...carMax)
+		{
+			for (j in 0...carMax)
+				if (Math.abs(car[i].y - car[j].y) < 200 && car[i].x == car[j].x)
+				{
+					car[i].velocity.set(0, car[j].velocity.y);
+				}
 		}
 	}
 
