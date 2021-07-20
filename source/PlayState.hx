@@ -51,14 +51,13 @@ class PlayState extends FlxState
 
 	// Car variables
 	var car:Array<Cars> = new Array();
-	var carMax:Int = 20; // Increment this value over distance to make game harder
-	var carTotal:Int = 0;
+	var carMax:Int = 20;
+	var carTotal:Int = 0; // Not used for anything?
 	var carSpawnX:Int;
 	var chooseLane:Int;
 	var chooseVehicle:Int;
 	var furthestCar:Float;
 	var isImmune:Bool;
-	var chooseDist:Int;
 
 	// Bumpers
 	var leftBumper:Bumpers;
@@ -113,10 +112,10 @@ class PlayState extends FlxState
 		add(boxThree);
 		add(boxFour);
 
-		// Test car
+		// Other cars on road
 		for (i in 0...carMax)
 		{
-			car[i] = new Cars(1000, -500);
+			car[i] = new Cars(1000, -500); // Very important that this starts offscreen
 			add(car[i]);
 			car[i].kill();
 		}
@@ -176,7 +175,7 @@ class PlayState extends FlxState
 		distDisp.x = 0;
 		speedDisp.x = 0;
 
-		// Camera testing
+		// Puts the player directly below center screen
 		FlxG.camera.scroll.x = 0;
 		FlxG.camera.scroll.y = player.y - 450;
 
@@ -210,6 +209,7 @@ class PlayState extends FlxState
 		{
 			boxPos(boxFour, boxFourPoint);
 		}
+		// Kill offscreen boxes
 		boxKiller(boxOne);
 		boxKiller(boxTwo);
 		boxKiller(boxThree);
@@ -221,6 +221,7 @@ class PlayState extends FlxState
 	// Make cars within range of the player
 	function spawnCars()
 	{
+		// Check if any cars are in the way
 		furthestCar = 0;
 		for (i in 0...carMax)
 		{
@@ -241,30 +242,17 @@ class PlayState extends FlxState
 				}
 				else if (chooseLane == 1)
 				{
-					carSpawnX = 400; // we'll try to center point minus half the width (to position left corner)
+					carSpawnX = 400 - 40;
 				}
 				else
 				{
 					carSpawnX = 440 + 50;
 				}
 
-				chooseDist = Std.random(3);
-				if (chooseDist == 0)
-				{
-					chooseDist = 900;
-				}
-				else if (chooseDist == 1)
-				{
-					chooseDist = 850;
-				}
-				else
-				{
-					chooseDist = 800;
-				}
 				// Spawn car offscreen in front of player in a lane
-				car[i].reset(carSpawnX, player.y - chooseDist);
-				car[i].velocity.set(0, -100 * Std.random(3) - 600);
-				chooseVehicle = Std.random(Cars.vehicles.length);
+				car[i].reset(carSpawnX, player.y - 50 * Std.random(3) - 800);
+				car[i].velocity.set(0, -100 * Std.random(3) - 600); // Choose a random car speed
+				chooseVehicle = Std.random(Cars.vehicles.length); // Pick out a car graphic
 				car[i].loadGraphic("assets/images/" + Cars.vehicles[chooseVehicle] + ".png");
 				carTotal += 1;
 				furthestCar = car[i].y;
@@ -272,14 +260,18 @@ class PlayState extends FlxState
 		}
 	}
 
+	// Prevent cars from hitting each other
 	function preventCarsFromHittingEachother()
 	{
 		for (i in 0...carMax)
 		{
 			for (j in 0...carMax)
-				if (Math.abs(car[i].y - car[j].y) < 200 && car[i].x == car[j].x)
+				if (car[i].x == car[j].x) // See if cars are in the same lane
 				{
-					car[i].velocity.set(0, car[j].velocity.y);
+					if (car[i].y - car[j].y < 200 && car[i].y - car[j].y > 0) // See if cars are too close
+					{
+						car[i].velocity.set(0, car[j].velocity.y);
+					}
 				}
 		}
 	}
