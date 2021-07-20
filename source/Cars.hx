@@ -18,13 +18,14 @@ class Cars extends FlxSprite
 		// Make the vehicle
 		super(x, y);
 		loadGraphic("assets/images/" + vehicles[chooseVehicle] + ".png");
+
+		driveCar();
 	}
 
 	// What changes with the car every frame
 	override public function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		driveCar();
 	}
 
 	// Move the car up
