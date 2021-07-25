@@ -134,7 +134,7 @@ class PlayState extends FlxState
 		add(sparks);
 		sparks.start(false, .01);
 
-		carExplode = new FlxEmitter(2, 2, 400);
+		carExplode = new FlxEmitter(2, 2, 100000);
 		carExplode.makeParticles(4, 4, FlxColor.ORANGE, 400);
 		carExplode.speed.set(25, 800, 100, 425);
 		add(carExplode);
@@ -250,7 +250,7 @@ class PlayState extends FlxState
 				}
 
 				// Spawn car offscreen in front of player in a lane
-				car[i].reset(carSpawnX, player.y - 50 * Std.random(3) - 800);
+				car[i].reset(carSpawnX, player.y - 50 * Std.random(3) - 1100);
 				car[i].velocity.set(0, -100 * Std.random(3) - 600); // Choose a random car speed
 				chooseVehicle = Std.random(Cars.vehicles.length); // Pick out a car graphic
 				car[i].loadGraphic("assets/images/" + Cars.vehicles[chooseVehicle] + ".png");
@@ -268,7 +268,7 @@ class PlayState extends FlxState
 			for (j in 0...carMax)
 				if (car[i].x == car[j].x) // See if cars are in the same lane
 				{
-					if (car[i].y - car[j].y < 200 && car[i].y - car[j].y > 0) // See if cars are too close
+					if (car[i].y - car[j].y < car[j].height + 20 && car[i].y - car[j].y > 0) // See if cars are too close
 					{
 						car[i].velocity.set(0, car[j].velocity.y);
 					}
@@ -333,8 +333,8 @@ class PlayState extends FlxState
 				carTotal -= 1;
 
 				// Particle explosion
-				carExplode.x = car[i].x + 30;
-				carExplode.y = car[i].y + 40;
+				carExplode.x = car[i].x + (car[i].width / 2);
+				carExplode.y = car[i].y + (car[i].height / 2);
 			}
 			// Check to see if car is passed offscreen
 			else if (car[i].y > player.y + 800)
@@ -345,6 +345,7 @@ class PlayState extends FlxState
 		}
 		if (isImmune) // Check if car hit
 		{
+			carExplode.speed.set(1, 10000);
 			carExplode.start(true, 0, 0);
 			playerHealth -= 1;
 		}
