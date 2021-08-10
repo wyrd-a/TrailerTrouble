@@ -5,7 +5,17 @@ import flixel.FlxSprite;
 class Cars extends FlxSprite
 {
 	// Yes, every single car shall be stored in this singular array
-	static public var vehicles:Array<String> = ["truck1", "car1", "playerModel", "blueprius", "beetle"];
+	static public var vehicles:Array<String> = [
+		"truck",
+		"tractor_trailer",
+		"truck1",
+		"car1",
+		"playerModel",
+		"blueprius",
+		"beetle",
+		"Durango",
+		"Delica"
+	];
 
 	var chooseVehicle:Int;
 

@@ -10,7 +10,7 @@ class Player extends FlxSprite
 	static var playerAngle:Float = 0;
 	public static var speed:Float = 0;
 
-	var ANGLECHANGE:Float = 4;
+	var ANGLECHANGE:Float = 2;
 	var MAXSPEED = 1500;
 
 	public static var STARTSPEED = 1000;
@@ -36,11 +36,13 @@ class Player extends FlxSprite
 		var down:Bool = false;
 		var left:Bool = false;
 		var right:Bool = false;
+		var space:Bool = false;
 
 		up = FlxG.keys.anyPressed([UP, W]);
 		down = FlxG.keys.anyPressed([DOWN, S]);
 		left = FlxG.keys.anyPressed([LEFT, A]);
 		right = FlxG.keys.anyPressed([RIGHT, D]);
+		space = FlxG.keys.anyPressed([SPACE]);
 		if (up && down)
 		{
 			up = down = false;
@@ -70,15 +72,18 @@ class Player extends FlxSprite
 		{
 			speed = MAXSPEED;
 		}
+		else if (space)
+		{
+			speed -= 40;
+		}
 		else if (down)
 		{
 			speed -= 20;
-
-			// Keep speed positive
-			if (speed < 0)
-			{
-				speed = 0;
-			}
+		}
+		// Keep speed FAST
+		if (speed < 600)
+		{
+			speed = 600;
 		}
 
 		// Keep playerAngle between -180 and 180
@@ -93,6 +98,7 @@ class Player extends FlxSprite
 		 */
 		velocity.set(0, -1 * speed);
 		velocity.rotate(FlxPoint.weak(0, 0), angle);
+		velocity.y = -1 * speed;
 	}
 
 	function keepOnRoad()

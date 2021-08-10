@@ -236,24 +236,24 @@ class PlayState extends FlxState
 			{
 				// Choose lane for car to drive in
 				chooseLane = Std.random(3);
-				if (chooseLane == 0)
+				if (chooseLane == 0) // 280
 				{
-					carSpawnX = 190 + 50;
+					carSpawnX = 280;
 				}
-				else if (chooseLane == 1)
+				else if (chooseLane == 1) // 402
 				{
-					carSpawnX = 400 - 40;
+					carSpawnX = 402;
 				}
-				else
+				else // 520
 				{
-					carSpawnX = 440 + 50;
+					carSpawnX = 520;
 				}
 
 				// Spawn car offscreen in front of player in a lane
-				car[i].reset(carSpawnX, player.y - 50 * Std.random(3) - 800);
+				car[i].loadGraphic("assets/images/" + Cars.vehicles[chooseVehicle] + ".png");
+				car[i].reset(carSpawnX - Std.int(car[i].width / 2), player.y - 50 * Std.random(3) - 800);
 				car[i].velocity.set(0, -100 * Std.random(3) - 600); // Choose a random car speed
 				chooseVehicle = Std.random(Cars.vehicles.length); // Pick out a car graphic
-				car[i].loadGraphic("assets/images/" + Cars.vehicles[chooseVehicle] + ".png");
 				carTotal += 1;
 				furthestCar = car[i].y;
 			}
@@ -266,7 +266,7 @@ class PlayState extends FlxState
 		for (i in 0...carMax)
 		{
 			for (j in 0...carMax)
-				if (car[i].x == car[j].x) // See if cars are in the same lane
+				if (car[i].x + (car[i].width / 2) == car[j].x + (car[j].width / 2)) // See if cars are in the same lane
 				{
 					if (car[i].y - car[j].y < 200 && car[i].y - car[j].y > 0) // See if cars are too close
 					{
