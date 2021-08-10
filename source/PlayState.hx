@@ -159,7 +159,7 @@ class PlayState extends FlxState
 		FlxG.watch.add(player, "x");
 		FlxG.watch.add(player, "y");
 		FlxG.watch.add(player, "angle");
-		FlxG.watch.add(car, "y", "Enemy Y");
+		FlxG.watch.add(car, "x", "Enemy x");
 
 		super.create();
 	}
@@ -251,7 +251,7 @@ class PlayState extends FlxState
 
 				// Spawn car offscreen in front of player in a lane
 				car[i].loadGraphic("assets/images/" + Cars.vehicles[chooseVehicle] + ".png");
-				car[i].reset(carSpawnX - Std.int(car[i].width / 2), player.y - 50 * Std.random(3) - 800);
+				car[i].reset(carSpawnX - Std.int(car[i].width / 2), player.y - 50 * Std.random(3) - car[i].height - 600);
 				car[i].velocity.set(0, -100 * Std.random(3) - 600); // Choose a random car speed
 				chooseVehicle = Std.random(Cars.vehicles.length); // Pick out a car graphic
 				carTotal += 1;
@@ -268,7 +268,7 @@ class PlayState extends FlxState
 			for (j in 0...carMax)
 				if (car[i].x + (car[i].width / 2) == car[j].x + (car[j].width / 2)) // See if cars are in the same lane
 				{
-					if (car[i].y - car[j].y < 200 && car[i].y - car[j].y > 0) // See if cars are too close
+					if (car[i].y - car[j].y < 50 + car[j].height && car[i].y - car[j].y > 0) // See if cars are too close
 					{
 						car[i].velocity.set(0, car[j].velocity.y);
 					}
