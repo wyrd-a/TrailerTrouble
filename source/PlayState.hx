@@ -12,6 +12,7 @@ import flixel.util.FlxCollision;
 import flixel.util.FlxColor;
 import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
+import flixel.system.FlxSound;
 
 class PlayState extends FlxState
 {
@@ -23,6 +24,10 @@ class PlayState extends FlxState
 	// Particle effects
 	var sparks:FlxEmitter;
 	var carExplode:FlxEmitter;
+
+	// Sound stuff
+	var isGrinding:Bool = false;
+	var grindSound:FlxSound;
 
 	// Displays
 	var speedDisp:FlxText = new FlxText(0, 0);
@@ -80,6 +85,10 @@ class PlayState extends FlxState
 
 	override public function create()
 	{
+		// Sound stuff
+		FlxG.sound.playMusic(AssetPaths.Main__ogg);
+		grindSound = FlxG.sound.load(AssetPaths.grind__wav);
+
 		// Bumpers for keeping car on road
 		leftBumper = new Bumpers(160, 0);
 		add(leftBumper);
@@ -134,10 +143,11 @@ class PlayState extends FlxState
 		add(sparks);
 		sparks.start(false, .01);
 
-		carExplode = new FlxEmitter(2, 2, 100000);
+		carExplode = new FlxEmitter(2, 2, 200);
 		carExplode.makeParticles(4, 4, FlxColor.ORANGE, 400);
 		carExplode.speed.set(25, 800, 100, 425);
 		add(carExplode);
+		carExplode.start(false);
 		carExplode.color.set(0xf9c22b, 0xf79617, 0xffffff);
 
 		// Timer
@@ -282,9 +292,10 @@ class PlayState extends FlxState
 		// Make trailer angle lag behind player angle
 		if (trailer.angle != player.angle)
 		{
-			trailer.angle += .1 * (player.angle - trailer.angle);
+			trailer.angle += .075 * (player.angle - trailer.angle);
 		}
 
+		// Set a max relative angle
 		if (Math.abs(player.angle - trailer.angle) > 30)
 		{
 			if (player.angle > trailer.angle)
@@ -347,6 +358,7 @@ class PlayState extends FlxState
 		{
 			carExplode.speed.set(1, 10000);
 			carExplode.start(true, 0, 0);
+			FlxG.sound.play(AssetPaths.crash__wav);
 			playerHealth -= 1;
 		}
 	}
@@ -423,6 +435,7 @@ class PlayState extends FlxState
 			sparks.emitting = true;
 			sparks.x = player.x;
 			sparks.y = player.y + 10;
+			grindSound.play();
 		}
 		else if (FlxG.collide(player, rightBumper))
 		{
@@ -430,9 +443,11 @@ class PlayState extends FlxState
 			sparks.emitting = true;
 			sparks.x = player.x + player.width;
 			sparks.y = player.y + 10;
+			grindSound.play();
 		}
 		else
 		{
+			grindSound.stop();
 			rightBumper.color = FlxColor.GREEN;
 			// leftBumper.color = FlxColor.RED;
 			sparks.emitting = false;

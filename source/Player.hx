@@ -10,7 +10,7 @@ class Player extends FlxSprite
 	static var playerAngle:Float = 0;
 	public static var speed:Float = 0;
 
-	var ANGLECHANGE:Float = 2;
+	var ANGLECHANGE:Float = 3;
 	var MAXSPEED = 1500;
 
 	public static var STARTSPEED = 1000;
