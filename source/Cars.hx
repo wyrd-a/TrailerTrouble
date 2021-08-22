@@ -10,7 +10,6 @@ class Cars extends FlxSprite
 		"tractor_trailer",
 		"truck1",
 		"car1",
-		"playerModel",
 		"blueprius",
 		"beetle",
 		"Durango",

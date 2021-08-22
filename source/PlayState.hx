@@ -1,5 +1,10 @@
 package;
 
+import haxe.display.Display.DeterminePackageResult;
+import flixel.FlxCamera;
+import flixel.FlxSprite;
+import js.html.ScreenOrientation;
+import openfl.display.Shader;
 import js.html.AbortController;
 import flixel.animation.FlxBaseAnimation;
 import flixel.text.FlxText;
@@ -13,13 +18,40 @@ import flixel.util.FlxColor;
 import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
 import flixel.system.FlxSound;
+import flixel.addons.display.FlxBackdrop;
+import flixel.FlxCamera;
+import flixel.FlxG;
+import flixel.ui.FlxButton;
+import flixel.FlxState;
+import openfl.filters.BitmapFilter;
 
 class PlayState extends FlxState
 {
+	// Pause menu stuff
+	var isPaused:Bool = false;
+	var isMenu:Bool = false;
+	var restartButton:FlxButton;
+	var musicButton:FlxButton;
+	var resumeButton:FlxButton;
+	var sfxButton:FlxButton;
+	var fullscreenButton:FlxButton;
+	var pauseMenuBackground:FlxSprite;
+	var pausePlayerX:Float;
+	var pausePlayerY:Float;
+	var pausePlayerSpeed:Float;
+	var pausePlayerAngle:Float;
+	var pauseCarX:Array<Float> = new Array();
+	var pauseCarY:Array<Float> = new Array();
+	var screenDarken:FlxSprite;
+
 	var player:Player;
 	var trailer:Trailer;
 
-	var WINDIST:Float = 100000;
+	// Game winning stuff
+	var WINDIST:Float = 10000;
+	var isWin:Bool = false;
+	var winCounter:Float = 0;
+	var winImmune:Bool;
 
 	// Particle effects
 	var sparks:FlxEmitter;
@@ -28,11 +60,15 @@ class PlayState extends FlxState
 	// Sound stuff
 	var isGrinding:Bool = false;
 	var grindSound:FlxSound;
+	var MainTheme:FlxSound;
+	var crashSound:FlxSound;
+	var PauseTheme:FlxSound;
 
 	// Displays
 	var speedDisp:FlxText = new FlxText(0, 0);
 	var distDisp:FlxText;
-
+	var speedometer:FlxSprite;
+	var speedNeedle:FlxSprite;
 	// Timer variables
 	var MAXTIME:Float = 180; // In seconds
 	var currentTime:Float = 0; // Keep track of time
@@ -83,11 +119,22 @@ class PlayState extends FlxState
 	// Side of Road stuff
 	var RoadSign:Array<RoadSigns> = new Array();
 
+	// Camera
+	var uiCamera:FlxCamera;
+
+	// Scanline "Filter" (its an image over the whole screen)
+	var scanlines:FlxSprite;
+
 	override public function create()
 	{
 		// Sound stuff
-		FlxG.sound.playMusic(AssetPaths.Main__ogg);
+		PauseTheme = FlxG.sound.load(AssetPaths.PauseTheme__ogg);
+		PauseTheme.looped = true;
+		MainTheme = FlxG.sound.load(AssetPaths.MainTheme__ogg);
+		MainTheme.looped = true;
+		MainTheme.play();
 		grindSound = FlxG.sound.load(AssetPaths.grind__wav);
+		crashSound = FlxG.sound.load(AssetPaths.crash__wav);
 
 		// Bumpers for keeping car on road
 		leftBumper = new Bumpers(160, 0);
@@ -126,6 +173,7 @@ class PlayState extends FlxState
 		{
 			car[i] = new Cars(1000, -500); // Very important that this starts offscreen
 			add(car[i]);
+
 			car[i].kill();
 		}
 
@@ -164,69 +212,229 @@ class PlayState extends FlxState
 		distDisp.size = 20;
 		add(speedDisp);
 		add(distDisp);
+		speedometer = new FlxSprite(0, 0);
+		speedometer.loadGraphic(AssetPaths.speed__png);
+		add(speedometer);
+		speedNeedle = new FlxSprite(0, 0);
+		speedNeedle.loadGraphic(AssetPaths.speedNeedle__png);
+		add(speedNeedle);
+
+		uiCamera = new FlxCamera(0, 0);
+		FlxG.cameras.add(uiCamera);
+
+		super.create();
+
+		// Pause menu initialization
+		screenDarken = new FlxSprite(0, 0);
+		screenDarken.loadGraphic(AssetPaths.dark_filter__png);
+		add(screenDarken);
+		screenDarken.kill();
+		pauseMenuBackground = new FlxSprite(0, 0);
+		pauseMenuBackground.loadGraphic(AssetPaths.PAUSED_WINDOW__png);
+		add(pauseMenuBackground);
+
+		pauseMenuBackground.kill();
+		restartButton = new FlxButton(0, 0, "", restartGame);
+		musicButton = new FlxButton(0, 0, "", muteMusic);
+		resumeButton = new FlxButton(0, 0, "", resumeGame);
+		sfxButton = new FlxButton(0, 0, "", muteSFX);
+		fullscreenButton = new FlxButton(0, 0, "", fullScreen);
+		restartButton.loadGraphic(AssetPaths.RETRY__png, true, 76, 50);
+		musicButton.loadGraphic(AssetPaths.uncheckedMusic__png);
+		resumeButton.loadGraphic(AssetPaths.RESUME__png, true, 76, 50);
+		sfxButton.loadGraphic(AssetPaths.uncheckedSFX__png);
+		fullscreenButton.loadGraphic(AssetPaths.uncheckedFS__png);
+
+		add(restartButton);
+		add(musicButton);
+		add(resumeButton);
+		add(sfxButton);
+		add(fullscreenButton);
+		restartButton.kill();
+		musicButton.kill();
+		resumeButton.kill();
+		sfxButton.kill();
+		fullscreenButton.kill();
+
+		// Pause menu state tracking (state of the art)
+		for (i in 0...carMax)
+		{
+			pauseCarX[i] = 0.0;
+			pauseCarY[i] = 0.0;
+		}
+		// Scanline overlay
+		scanlines = new FlxSprite(0, 0);
+		scanlines.loadGraphic(AssetPaths.scanTest2__png);
+		add(scanlines);
 
 		// Debug stuff
 		FlxG.watch.add(player, "x");
 		FlxG.watch.add(player, "y");
 		FlxG.watch.add(player, "angle");
+		FlxG.watch.add(restartButton, "y");
 		FlxG.watch.add(car, "x", "Enemy x");
-
-		super.create();
 	}
 
 	// Make stuff happen
 	override public function update(elapsed:Float)
 	{
-		timerUpdate();
-		distDisp.text = "Distance: " + Math.round(-1 * player.y);
-		speedDisp.text = "Speed: " + (Player.speed);
-		speedDisp.y = player.y + 300;
-		distDisp.y = player.y - 24 + 300;
-		distDisp.x = 0;
-		speedDisp.x = 0;
-
-		// Puts the player directly below center screen
-		FlxG.camera.scroll.x = 0;
-		FlxG.camera.scroll.y = player.y - 450;
-
-		spawnCars(); // Spawn some cars
-		preventCarsFromHittingEachother(); // This one does something, not quite sure what
-		healthCheck();
-
-		super.update(elapsed);
-
-		carCollide();
-
-		bumperUpdate();
-
-		trailerHitch(); // Update trailer angle
-		trailerPosition();
-
-		// Move boxes to be on trailer
-		if (playerHealth > 0)
+		checkVolume();
+		if (FlxG.keys.anyJustReleased([P])) // Check to see if game is paused
 		{
-			boxPos(boxOne, boxOnePoint);
+			isPaused = !isPaused;
 		}
-		if (playerHealth > 1)
+		if (!isPaused && player.y > -1 * WINDIST)
 		{
-			boxPos(boxTwo, boxTwoPoint);
-		}
-		if (playerHealth > 2)
-		{
-			boxPos(boxThree, boxThreePoint);
-		}
-		if (playerHealth > 3)
-		{
-			boxPos(boxFour, boxFourPoint);
-		}
-		// Kill offscreen boxes
-		boxKiller(boxOne);
-		boxKiller(boxTwo);
-		boxKiller(boxThree);
-		boxKiller(boxFour);
+			if (isMenu)
+			{
+				screenDarken.kill();
+				restartButton.kill();
+				musicButton.kill();
+				resumeButton.kill();
+				sfxButton.kill();
+				fullscreenButton.kill();
+				pauseMenuBackground.kill();
+				isMenu = false;
+			}
+			timerUpdate();
+			distDisp.text = "Distance: " + Math.round(-1 * player.y);
+			speedDisp.text = "Speed: " + (Player.speed);
+			speedDisp.y = player.y + 300;
+			distDisp.y = player.y - 24 + 300;
+			distDisp.x = 0;
+			speedDisp.x = 0;
 
-		winGame(); // Check to see if player is at required distance
-	}
+			// Puts the player directly below center screen
+			uiCamera.scroll.x = 0;
+			uiCamera.scroll.y = player.y - 450;
+			scanlines.y = uiCamera.scroll.y;
+			scanlines.x = uiCamera.x;
+			meterMove();
+
+			spawnCars(); // Spawn some cars
+			preventCarsFromHittingEachother(); // This one does something, not quite sure what
+			healthCheck();
+
+			super.update(elapsed);
+
+			carCollide();
+
+			bumperUpdate();
+
+			trailerHitch(); // Update trailer angle
+			trailerPosition();
+
+			// Move boxes to be on trailer
+			if (playerHealth > 0)
+			{
+				boxPos(boxOne, boxOnePoint);
+			}
+			if (playerHealth > 1)
+			{
+				boxPos(boxTwo, boxTwoPoint);
+			}
+			if (playerHealth > 2)
+			{
+				boxPos(boxThree, boxThreePoint);
+			}
+			if (playerHealth > 3)
+			{
+				boxPos(boxFour, boxFourPoint);
+			}
+			// Kill offscreen boxes
+			boxKiller(boxOne);
+			boxKiller(boxTwo);
+			boxKiller(boxThree);
+			boxKiller(boxFour);
+		}
+		else if (!isPaused) // Win game! Yay!
+		{
+			if (!isWin)
+			{
+				isWin = true;
+				pausePlayerSpeed = Player.speed;
+				pausePlayerAngle = player.angle;
+				pausePlayerX = player.x;
+			}
+			super.update(elapsed);
+			winImmune = carCollide();
+			if (winImmune)
+			{
+				playerHealth += 1;
+			}
+			Player.speed = pausePlayerSpeed;
+			player.angle = 0;
+			player.x = pausePlayerX;
+
+			trailerHitch();
+			trailerPosition();
+
+			// Move boxes to be on trailer
+			if (playerHealth > 0)
+			{
+				boxPos(boxOne, boxOnePoint);
+			}
+			if (playerHealth > 1)
+			{
+				boxPos(boxTwo, boxTwoPoint);
+			}
+			if (playerHealth > 2)
+			{
+				boxPos(boxThree, boxThreePoint);
+			}
+			if (playerHealth > 3)
+			{
+				boxPos(boxFour, boxFourPoint);
+			}
+			uiCamera.scroll.y = player.y + winCounter - 450;
+			scanlines.y = uiCamera.scroll.y;
+			winCounter += 5;
+			if (winCounter > 150 * 5)
+			{
+				winGame(); // Win game
+			}
+		}
+		else // Pause menu goes here
+		{
+			if (!isMenu)
+			{
+				isMenu = true;
+				screenDarken.reset(0, uiCamera.scroll.y);
+				pauseMenuBackground.reset(400 - (pauseMenuBackground.width / 2), player.y - 200);
+				fullscreenButton.reset(472, 300);
+				sfxButton.reset(472, 349);
+				musicButton.reset(472, 396);
+				restartButton.reset(296, 512);
+				resumeButton.reset(428, 512);
+				pausePlayerX = player.x;
+				pausePlayerY = player.y;
+				pausePlayerSpeed = Player.speed;
+				pausePlayerAngle = player.angle;
+				for (i in 0...carMax)
+				{
+					pauseCarX[i] = car[i].x;
+					pauseCarY[i] = car[i].y;
+				}
+			}
+			super.update(elapsed);
+			// Make sure the world stays still
+			player.x = pausePlayerX;
+			player.y = pausePlayerY;
+			player.angle = pausePlayerAngle;
+			Player.speed = pausePlayerSpeed;
+			for (i in 0...carMax)
+			{
+				car[i].x = pauseCarX[i];
+				car[i].y = pauseCarY[i];
+			}
+
+			if (sparks.emitting)
+			{
+				grindSound.stop();
+				sparks.emitting = false;
+			}
+		}
+	} // **********************************************************************************************************************************
 
 	// Make cars within range of the player
 	function spawnCars()
@@ -358,9 +566,10 @@ class PlayState extends FlxState
 		{
 			carExplode.speed.set(1, 10000);
 			carExplode.start(true, 0, 0);
-			FlxG.sound.play(AssetPaths.crash__wav);
+			crashSound.play();
 			playerHealth -= 1;
 		}
+		return isImmune;
 	}
 
 	function boxPos(box:Boxes, point:FlxPoint)
@@ -379,6 +588,7 @@ class PlayState extends FlxState
 		if (playerHealth <= 0)
 		{
 			boxSpin(boxOne);
+			Meta.playerDist = Math.round(player.y);
 			FlxG.switchState(new LoseState());
 		}
 		else if (playerHealth == 1)
@@ -399,6 +609,7 @@ class PlayState extends FlxState
 	{
 		if (player.y * -1 >= WINDIST)
 		{
+			Meta.playerTime = currentTime;
 			FlxG.switchState(new WinState());
 		}
 	}
@@ -467,6 +678,103 @@ class PlayState extends FlxState
 		if (box.y > player.y + 800)
 		{
 			box.kill();
+		}
+	}
+
+	function meterMove()
+	{
+		speedometer.x = scanlines.x + 800 - speedometer.width;
+		speedometer.y = scanlines.y + 900 - speedometer.height;
+
+		// Needle angle control
+		speedNeedle.angle = (Player.speed - ((Player.MINSPEED + Player.MAXSPEED) / 2)) * (260 / (-Player.MINSPEED + Player.MAXSPEED));
+		speedNeedle.x = speedometer.x + 102 - (speedNeedle.width / 2);
+		speedNeedle.y = speedometer.y + 102 - (speedNeedle.height / 2);
+	}
+
+	function checkVolume()
+	{
+		if (Meta.isMusicMuted)
+		{
+			MainTheme.volume = 0;
+		}
+		else
+		{
+			MainTheme.volume = 1;
+		}
+		if (Meta.isSFXMuted)
+		{
+			grindSound.volume = 0;
+			crashSound.volume = 0;
+		}
+		else
+		{
+			grindSound.volume = 1;
+			crashSound.volume = 1;
+		}
+		if (!FlxG.fullscreen)
+		{
+			fullscreenButton.loadGraphic(AssetPaths.uncheckedFS__png);
+		}
+		else
+		{
+			fullscreenButton.loadGraphic(AssetPaths.checkedFS__png);
+		}
+		if (Meta.isMusicMuted)
+		{
+			musicButton.loadGraphic(AssetPaths.checkedMusic__png);
+		}
+		else
+		{
+			musicButton.loadGraphic(AssetPaths.uncheckedMusic__png);
+		}
+		if (Meta.isSFXMuted)
+		{
+			sfxButton.loadGraphic(AssetPaths.checkedSFX__png);
+		}
+		else
+		{
+			sfxButton.loadGraphic(AssetPaths.uncheckedSFX__png);
+		}
+	}
+
+	// Button Functions
+	function restartGame()
+	{
+		FlxG.switchState(new PlayState());
+	}
+
+	function muteSFX()
+	{
+		if (Meta.isSFXMuted)
+		{
+			Meta.isSFXMuted = false;
+		}
+		else
+		{
+			Meta.isSFXMuted = true;
+		}
+	}
+
+	function fullScreen()
+	{
+		FlxG.fullscreen = !FlxG.fullscreen;
+	}
+
+	function resumeGame()
+	{
+		isPaused = false;
+	}
+
+	function muteMusic()
+	{
+		if (Meta.isMusicMuted)
+		{
+			Meta.isMusicMuted = false;
+		}
+		else
+		{
+			Meta.isMusicMuted = true;
 		}
 	}
 }

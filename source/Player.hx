@@ -11,9 +11,11 @@ class Player extends FlxSprite
 	public static var speed:Float = 0;
 
 	var ANGLECHANGE:Float = 3;
-	var MAXSPEED = 1500;
 
-	public static var STARTSPEED = 1000;
+	public static var MAXSPEED = 1500;
+	public static var MINSPEED = 500;
+
+	public static var STARTSPEED = 700;
 
 	override public function update(elapsed:Float)
 	{
@@ -81,9 +83,9 @@ class Player extends FlxSprite
 			speed -= 20;
 		}
 		// Keep speed FAST
-		if (speed < 600)
+		if (speed < MINSPEED)
 		{
-			speed = 600;
+			speed = MINSPEED;
 		}
 
 		// Keep playerAngle between -180 and 180
@@ -98,6 +100,8 @@ class Player extends FlxSprite
 		 */
 		velocity.set(0, -1 * speed);
 		velocity.rotate(FlxPoint.weak(0, 0), angle);
+
+		// Keeps y velocity unaffected by turning
 		velocity.y = -1 * speed;
 	}
 
