@@ -49,7 +49,7 @@ class PlayState extends FlxState
 	var trailer:Trailer;
 
 	// Game winning stuff
-	var WINDIST:Float = 10000;
+	var WINDIST:Float = 100000;
 	var isWin:Bool = false;
 	var winCounter:Float = 0;
 	var winImmune:Bool;
@@ -117,6 +117,9 @@ class PlayState extends FlxState
 	var trailerX:Float;
 	var trailerY:Float;
 
+	// Environment variables
+	var env:env.Environment;
+
 	// Side of Road stuff
 	// var RoadSign:Array<RoadSigns> = new Array();
 	// Camera
@@ -136,7 +139,7 @@ class PlayState extends FlxState
 		grindSound = FlxG.sound.load(AssetPaths.grind__wav);
 		crashSound = FlxG.sound.load(AssetPaths.crash__wav);
 
-		var env = new Environment(add, remove);
+		this.env = new Environment(add, remove);
 
 		// Bumpers for keeping car on road
 		leftBumper = new Bumpers(160, 0);
@@ -280,6 +283,8 @@ class PlayState extends FlxState
 	// Make stuff happen
 	override public function update(elapsed:Float)
 	{
+		this.env.update(this.player.y);
+
 		checkVolume();
 		if (FlxG.keys.anyJustReleased([P])) // Check to see if game is paused
 		{

@@ -8,10 +8,9 @@ import flixel.FlxG;
 import haxe.Exception;
 import flixel.FlxSprite;
 
-class RoadSign implements env.EnvItem extends flixel.FlxSprite
+class CrossTrack implements env.EnvItem extends flixel.FlxSprite
 {
-	public var name:String = "RoadSign";
-
+	public var name:String = "CrossTrack";
 	// Environment item behavior
 	public var alwaysLeft:Bool;
 	public var alwaysRight:Bool;
@@ -27,28 +26,21 @@ class RoadSign implements env.EnvItem extends flixel.FlxSprite
 	// Sign specific vars
 	public var envItemType:String;
 
-	public static var signTypes:Array<String> = [
-		"89Sign",
-		"95Sign",
-		"overheadTripleSign",
-		"rightOverheadSign",
-		"simpleSign",
-		"speedLimitSign",
-	];
+	public static var trackTypes:Array<String> = ["tunnelTracks",];
 
 	public function new(?envItemType:String, ?exclusivity:Array<String>)
 	{
 		var availableTypes:Array<String>;
 		if (exclusivity != null)
 		{
-			availableTypes = signTypes.filter((exclusiveEnvItemType:String) ->
+			availableTypes = trackTypes.filter((exclusiveEnvItemType:String) ->
 			{
 				return !exclusivity.contains(exclusiveEnvItemType);
 			});
 		}
 		else
 		{
-			availableTypes = signTypes;
+			availableTypes = trackTypes;
 		}
 
 		if (envItemType == null)
@@ -56,7 +48,7 @@ class RoadSign implements env.EnvItem extends flixel.FlxSprite
 			this.envItemType = availableTypes[utils.Math.randRange(0, availableTypes.length - 1)];
 			initEnvItem(this.envItemType);
 		}
-		else if (!signTypes.contains(envItemType))
+		else if (!trackTypes.contains(envItemType))
 		{
 			throw new Exception("Sign type provided to road sign class: " + envItemType + ", is invalid");
 		}
@@ -67,14 +59,14 @@ class RoadSign implements env.EnvItem extends flixel.FlxSprite
 		}
 
 		super(0, 0);
-		loadGraphic("assets/images/roadSigns/" + this.envItemType + ".png");
+		loadGraphic("assets/images/crossTracks/" + this.envItemType + ".png");
 	}
 
 	private function initEnvItem(?envItemType:String)
 	{
-		if (envItemType == null || !signTypes.contains(envItemType))
+		if (envItemType == null || !trackTypes.contains(envItemType))
 		{
-			throw new Exception("RoadSign requires type when initializing");
+			throw new Exception("CrossTrack requires type when initializing");
 		}
 
 		this.initPosition(envItemType);
@@ -83,43 +75,18 @@ class RoadSign implements env.EnvItem extends flixel.FlxSprite
 
 	private function initPosition(envItemType:String)
 	{
-		if (envItemType == "89Sign" || envItemType == "95Sign")
-		{
-			this.alwaysRight = true;
-		}
-		else if (envItemType == "overheadTripleSign")
+		if (envItemType == "tunnelTracks")
 		{
 			this.alwaysCentered = true;
-			this.fixedX = 125;
-		}
-		else if (envItemType == "rightOverheadSign")
-		{
-			this.alwaysRight = true;
-			this.fixedX = 465;
-		}
-		else if (envItemType == "simpleSign" || envItemType == "testSign" || envItemType == "speedLimitSign")
-		{
-			this.eitherSide = true;
+			this.fixedX = 0;
 		}
 	}
 
 	private function initSpawnChance(envItemType:String)
 	{
-		if (envItemType == "89Sign" || envItemType == "95Sign")
-		{
-			this.spawnChance = 0.1;
-		}
-		else if (envItemType == "simpleSign")
-		{
-			this.spawnChance = 0.25;
-		}
-		else if (envItemType == "overHeadTripleSign" || envItemType == "rightOverheadSign")
+		if (envItemType == "tunnelTracks")
 		{
 			this.spawnChance = 0.05;
-		}
-		else
-		{
-			this.spawnChance = 0.1;
 		}
 	}
 }
