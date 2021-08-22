@@ -6,14 +6,7 @@ class Cars extends FlxSprite
 {
 	// Yes, every single car shall be stored in this singular array
 	static public var vehicles:Array<String> = [
-		"truck",
-		"tractor_trailer",
-		"truck1",
-		"car1",
-		"blueprius",
-		"beetle",
-		"Durango",
-		"Delica"
+		"truck", "tractor_trailer", "truck1", "car1", "blueprius", "beetle", "Durango", "Delica", "bus", "saab900", "Miata"
 	];
 
 	var chooseVehicle:Int;
