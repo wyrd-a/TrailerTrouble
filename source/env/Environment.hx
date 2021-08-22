@@ -6,6 +6,7 @@ import utils.Math;
 import env.RoadSign;
 import env.CrossRoad;
 import env.CrossTrack;
+import env.NatureClump;
 // External imports
 import flixel.FlxG;
 import flixel.FlxBasic;
@@ -21,7 +22,7 @@ class Environment
 	public var MEDIAN_WIDTH = 125;
 
 	// Spawn chance variables
-	public var envItemTypes = ["RoadSign", "CrossTrack", "CrossRoad"];
+	public var envItemTypes = ["RoadSign", "CrossTrack", "CrossRoad", "NatureClump"];
 	public var SPAWN_ATTEMPTS = 3;
 	public var GLOBAL_SPAWN_CHANCE = 0.25;
 
@@ -34,6 +35,9 @@ class Environment
 
 	public var MAX_CROSSROADS = 1;
 	public var crossRoads:Array<env.CrossRoad> = [];
+
+	public var MAX_NATURECLUMPS = 3;
+	public var natureClumps:Array<env.NatureClump> = [];
 
 	public function new(add:FlxBasic->FlxBasic, remove:(FlxBasic, ?Bool) -> FlxBasic)
 	{
@@ -81,6 +85,16 @@ class Environment
 				crossRoads.remove(envItem);
 			}
 		}
+
+		for (envItem in this.natureClumps)
+		{
+			// If item is offscreen AND behind player, remove it
+			if (!envItem.isOnScreen() && envItem.y > playerY + FlxG.height)
+			{
+				this.remove(envItem);
+				this.natureClumps.remove(envItem);
+			}
+		}
 	}
 
 	// Selects a random type of environment item and initializes it
@@ -106,6 +120,11 @@ class Environment
 			else if (newEnvItemType == "CrossRoad" && this.crossRoads.length < this.MAX_CROSSROADS && this.crossTracks.length == 0)
 			{
 				newItem = new env.CrossRoad();
+				addNewEnvItem(playerY, newItem);
+			}
+			else if (newEnvItemType == "NatureClump" && this.natureClumps.length < this.MAX_NATURECLUMPS)
+			{
+				newItem = new env.NatureClump();
 				addNewEnvItem(playerY, newItem);
 			}
 			else
@@ -155,6 +174,16 @@ class Environment
 				{
 					this.crossRoads.push(cast(newSprite, env.CrossRoad));
 					this.add(this.crossRoads[this.crossRoads.length - 1]);
+				}
+				else if (newItem.name == "NatureClump")
+				{
+					trace("Created new nature clump");
+					this.natureClumps.push(cast(newSprite, env.NatureClump));
+					this.add(this.natureClumps[this.natureClumps.length - 1]);
+				}
+				else
+				{
+					trace("Unknown item:", newItem.name);
 				}
 			}
 		}
@@ -313,6 +342,18 @@ class Environment
 		if (!conflicts)
 		{
 			for (envItem in this.crossTracks)
+			{
+				if (newEnvItem.overlaps(envItem))
+				{
+					conflicts = true;
+					break;
+				}
+			}
+		}
+
+		if (!conflicts)
+		{
+			for (envItem in this.natureClumps)
 			{
 				if (newEnvItem.overlaps(envItem))
 				{

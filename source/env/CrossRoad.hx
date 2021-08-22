@@ -20,8 +20,6 @@ class CrossRoad implements env.EnvItem extends flixel.FlxSprite
 	public var spawnChance:Float;
 
 	public var eitherSide:Bool;
-	public var flippedOnLeft:Bool;
-	public var flippedOnRight:Bool;
 
 	// Sign specific vars
 	public var envItemType:String;

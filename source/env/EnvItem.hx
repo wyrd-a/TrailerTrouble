@@ -11,8 +11,6 @@ interface EnvItem
 	public var alwaysRight:Bool;
 	public var fixedX:Int;
 	public var eitherSide:Bool;
-	public var flippedOnLeft:Bool;
-	public var flippedOnRight:Bool;
 	public var spawnChance:Float;
 	public var envItemType:String;
 	private function initEnvItem(?envItemType:String):Void;
