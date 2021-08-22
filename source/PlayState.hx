@@ -24,6 +24,7 @@ import flixel.FlxG;
 import flixel.ui.FlxButton;
 import flixel.FlxState;
 import openfl.filters.BitmapFilter;
+import env.Environment;
 
 class PlayState extends FlxState
 {
@@ -117,8 +118,7 @@ class PlayState extends FlxState
 	var trailerY:Float;
 
 	// Side of Road stuff
-	var RoadSign:Array<RoadSigns> = new Array();
-
+	// var RoadSign:Array<RoadSigns> = new Array();
 	// Camera
 	var uiCamera:FlxCamera;
 
@@ -135,6 +135,8 @@ class PlayState extends FlxState
 		MainTheme.play();
 		grindSound = FlxG.sound.load(AssetPaths.grind__wav);
 		crashSound = FlxG.sound.load(AssetPaths.crash__wav);
+
+		var env = new Environment(add, remove);
 
 		// Bumpers for keeping car on road
 		leftBumper = new Bumpers(160, 0);
@@ -178,12 +180,12 @@ class PlayState extends FlxState
 		}
 
 		// Roadsigns
-		for (i in 0...50) // Just testing how the signs look at speed
-		{
-			RoadSign[i] = new RoadSigns(700, -360 * i);
-			add(RoadSign[i]);
-			trace(i);
-		}
+		// for (i in 0...50) // Just testing how the signs look at speed
+		// {
+		// 	// RoadSign[i] = new RoadSigns(700, -360 * i);
+		// 	// add(RoadSign[i]);
+		// 	trace(i);
+		// }
 
 		// Particle effects
 		sparks = new FlxEmitter(10, 10, 200);
