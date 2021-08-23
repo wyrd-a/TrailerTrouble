@@ -15,9 +15,9 @@ import flixel.FlxG;
 import flixel.ui.FlxButton;
 import flixel.FlxState;
 import flixel.util.FlxTimer;
-// import io.newgrounds.NG;
 import env.Environment;
 
+// import env.Environment;
 class PlayState extends FlxState
 {
 	// Pause menu stuff
@@ -140,10 +140,6 @@ class PlayState extends FlxState
 	override public function create()
 	{
 		// Newgrounds stuff!
-		// NG.create(APIKeys.APIid);
-		// NG.core.initEncryption(APIKeys.APIkey, io.newgrounds.crypto.Cipher.RC4, io.newgrounds.crypto.EncryptionFormat.BASE_64);
-		// var winnerMedal = NG.core.medals.get(APIKeys.winnerID);
-		// var fasterMedal = NG.core.medals.get(APIKeys.fasterID);
 
 		buttonSound = new FlxSound();
 		buttonSound = new FlxSound();
@@ -605,20 +601,25 @@ class PlayState extends FlxState
 		{
 			// "May be slow, so use it sparingly." - FlxCollision documentation
 			// Call it every frame! lmao
-			if (!isImmune
-				&& car[i].alive
-				&& (FlxCollision.pixelPerfectCheck(player, car[i]) || FlxCollision.pixelPerfectCheck(trailer, car[i])))
+			if (!isImmune && car[i].alive)
 			{
-				car[i].kill();
-				isImmune = true;
-				carTotal -= 1;
+				if (FlxG.overlap(player, car[i], hitBoxHit)
+					|| FlxG.overlap(trailer, car[i], hitBoxHit)) // KARL CHECK HERE FOR OPTIMIZATION STUFF
+				{
+					if (FlxCollision.pixelPerfectCheck(player, car[i]) || FlxCollision.pixelPerfectCheck(trailer, car[i]))
+					{
+						car[i].kill();
+						isImmune = true;
+						carTotal -= 1;
 
-				// Particle explosion
-				carExplode.x = car[i].x + (car[i].width / 2);
-				carExplode.y = car[i].y + (car[i].height / 2);
+						// Particle explosion
+						carExplode.x = car[i].x + (car[i].width / 2);
+						carExplode.y = car[i].y + (car[i].height / 2);
+					}
+				}
 			}
 			// Check to see if car is passed offscreen
-			else if (car[i].y > player.y + 800 && !isWin)
+			if (car[i].y > player.y + 800 && !isWin)
 			{
 				car[i].kill();
 				carTotal -= 1;
@@ -671,6 +672,12 @@ class PlayState extends FlxState
 	{
 		if (!isWinMenu)
 		{
+			NGio.postScore(Std.int(currentTime.elapsedTime * 100), "Fastest Completion");
+			NGio.unlockMedal(64830);
+			if (currentTime.elapsedTime < 90)
+			{
+				NGio.unlockMedal(64831);
+			}
 			winscreen.reset(400 - (winscreen.width / 2), uiCamera.scroll.y + 238);
 			winText.text = "You made it in " + Math.round(currentTime.elapsedTime * 100) / 100 + " Seconds!";
 			winText.reset(220, uiCamera.scroll.y + 300);
@@ -859,7 +866,7 @@ class PlayState extends FlxState
 			losescreen.reset(400 - (winscreen.width / 2), uiCamera.scroll.y + 238);
 			loseText.reset(220, uiCamera.scroll.y + 300);
 			loseText.size = 20;
-			loseText.text = "You made it " + -1 * Math.round(player.y) + " Distance!";
+			loseText.text = "You made it " + (-1 * Math.round(player.y / WINDIST * 100)) + "% of the way!";
 			restartButton.reset(218, 514);
 			menuButton.reset(506, 514);
 		}
@@ -920,5 +927,10 @@ class PlayState extends FlxState
 	{
 		buttonSound.stop();
 		buttonSound.play();
+	}
+
+	function hitBoxHit(objA, objB)
+	{
+		return 1;
 	}
 }
