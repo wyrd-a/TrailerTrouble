@@ -51,7 +51,7 @@ class PlayState extends FlxState
 	var trailer:Trailer;
 
 	// Game winning stuff
-	var WINDIST:Float = 1000;
+	var WINDIST:Float = 100000;
 	var isWin:Bool = false;
 	var winCounter:Float = 0;
 	var winImmune:Bool;
@@ -73,7 +73,7 @@ class PlayState extends FlxState
 	var speedometer:FlxSprite;
 	var speedNeedle:FlxSprite;
 	// Timer variables
-	var MAXTIME:Float = 180; // In seconds
+	var MAXTIME:Float = 140; // In seconds
 	var currentTime:FlxTimer; // Keep track of time
 	var timerDisp:FlxText; // Display at the top
 	var timerDisplay:FlxSprite;
@@ -136,10 +136,10 @@ class PlayState extends FlxState
 	override public function create()
 	{
 		// Newgrounds stuff!
-		NG.create(APIKeys.APIid);
-		NG.core.initEncryption(APIKeys.APIkey, io.newgrounds.crypto.Cipher.RC4, io.newgrounds.crypto.EncryptionFormat.BASE_64);
-		var winnerMedal = NG.core.medals.get(APIKeys.winnerID);
-		var fasterMedal = NG.core.medals.get(APIKeys.fasterID);
+		// NG.create(APIKeys.APIid);
+		// NG.core.initEncryption(APIKeys.APIkey, io.newgrounds.crypto.Cipher.RC4, io.newgrounds.crypto.EncryptionFormat.BASE_64);
+		// var winnerMedal = NG.core.medals.get(APIKeys.winnerID);
+		// var fasterMedal = NG.core.medals.get(APIKeys.fasterID);
 
 		buttonSound = new FlxSound();
 		buttonSound = new FlxSound();
