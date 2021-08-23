@@ -135,7 +135,7 @@ class PlayState extends FlxState
 
 	override public function create()
 	{
-		// NG stuff!
+		// Newgrounds stuff!
 		NG.create(APIKeys.APIid);
 		NG.core.initEncryption(APIKeys.APIkey, io.newgrounds.crypto.Cipher.RC4, io.newgrounds.crypto.EncryptionFormat.BASE_64);
 		var winnerMedal = NG.core.medals.get(APIKeys.winnerID);
