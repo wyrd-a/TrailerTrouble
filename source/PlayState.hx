@@ -16,7 +16,6 @@ import flixel.ui.FlxButton;
 import flixel.FlxState;
 import flixel.util.FlxTimer;
 
-// import io.newgrounds.NG;
 // import env.Environment;
 class PlayState extends FlxState
 {
@@ -140,10 +139,6 @@ class PlayState extends FlxState
 	override public function create()
 	{
 		// Newgrounds stuff!
-		// NG.create(APIKeys.APIid);
-		// NG.core.initEncryption(APIKeys.APIkey, io.newgrounds.crypto.Cipher.RC4, io.newgrounds.crypto.EncryptionFormat.BASE_64);
-		// var winnerMedal = NG.core.medals.get(APIKeys.winnerID);
-		// var fasterMedal = NG.core.medals.get(APIKeys.fasterID);
 
 		buttonSound = new FlxSound();
 		buttonSound = new FlxSound();
@@ -675,6 +670,12 @@ class PlayState extends FlxState
 	{
 		if (!isWinMenu)
 		{
+			NGio.postScore(Std.int(currentTime.elapsedTime * 100), "Fastest Completion");
+			NGio.unlockMedal(64830);
+			if (currentTime.elapsedTime < 90)
+			{
+				NGio.unlockMedal(64831);
+			}
 			winscreen.reset(400 - (winscreen.width / 2), uiCamera.scroll.y + 238);
 			winText.text = "You made it in " + Math.round(currentTime.elapsedTime * 100) / 100 + " Seconds!";
 			winText.reset(220, uiCamera.scroll.y + 300);
