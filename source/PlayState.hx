@@ -598,7 +598,8 @@ class PlayState extends FlxState
 			// "May be slow, so use it sparingly." - FlxCollision documentation
 			// Call it every frame! lmao
 			if (!isImmune && car[i].alive)
-				if (FlxG.overlap(player, car[i], hitBoxHit) || FlxG.overlap(trailer, car[i], hitBoxHit))
+				if (FlxG.overlap(player, car[i], hitBoxHit)
+					|| FlxG.overlap(trailer, car[i], hitBoxHit)) // KARL CHECK HERE FOR OPTIMIZATION STUFF
 				{
 					if (FlxCollision.pixelPerfectCheck(player, car[i]) || FlxCollision.pixelPerfectCheck(trailer, car[i]))
 					{
