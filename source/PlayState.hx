@@ -160,8 +160,6 @@ class PlayState extends FlxState
 		grindSound = FlxG.sound.load(AssetPaths.grind__wav);
 		crashSound = FlxG.sound.load(AssetPaths.crash__wav);
 
-		this.env = new Environment(add, remove);
-
 		// Bumpers for keeping car on road
 		leftBumper = new Bumpers(160, 0);
 		add(leftBumper);
@@ -201,6 +199,9 @@ class PlayState extends FlxState
 			add(car[i]);
 			car[i].kill();
 		}
+
+		// Env items should be above background, player, and vehicles, but below menu
+		this.env = new Environment(add, remove);
 
 		// Particle effects
 		sparks = new FlxEmitter(1000, 1000, 200);

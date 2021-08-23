@@ -11,6 +11,7 @@ import env.NatureClump;
 import flixel.FlxG;
 import flixel.FlxBasic;
 import flixel.FlxSprite;
+import flixel.group.FlxGroup.FlxTypedGroup;
 
 class Environment
 {
@@ -23,32 +24,42 @@ class Environment
 
 	// Spawn chance variables
 	public var envItemTypes = ["RoadSign", "CrossTrack", "CrossRoad", "NatureClump"];
+	// public var envItemTypes = ["RoadSign", "NatureClump"];
 	public var SPAWN_ATTEMPTS = 3;
 	public var GLOBAL_SPAWN_CHANCE = 0.25;
 
 	// Environment attributes
 	public var MAX_ROADSIGNS = 10;
-	public var roadSigns:Array<env.RoadSign> = [];
+	public var roadSigns = new FlxTypedGroup<env.RoadSign>(10);
 
 	public var MAX_CROSSTRACKS = 1;
-	public var crossTracks:Array<env.CrossTrack> = [];
+	public var crossTracks = new FlxTypedGroup<env.CrossTrack>(1);
 
 	public var MAX_CROSSROADS = 1;
-	public var crossRoads:Array<env.CrossRoad> = [];
+	public var crossRoads = new FlxTypedGroup<env.CrossRoad>(1);
 
 	public var MAX_NATURECLUMPS = 3;
-	public var natureClumps:Array<env.NatureClump> = [];
+	public var natureClumps = new FlxTypedGroup<env.NatureClump>(3);
 
 	public function new(add:FlxBasic->FlxBasic, remove:(FlxBasic, ?Bool) -> FlxBasic)
 	{
 		this.add = add;
 		this.remove = remove;
+
+		// Added road
+		this.add(this.roadSigns);
+		this.add(this.crossTracks);
+		this.add(this.crossRoads);
+		this.add(this.natureClumps);
 	}
 
 	public function update(playerY:Float)
 	{
 		this.removeOffscreen(playerY);
 		this.makeNewEnvItem(Math.round(playerY));
+
+		trace("roadSigns", this.roadSigns.length);
+		trace("natureClumps", this.natureClumps.length);
 	}
 
 	private function removeOffscreen(playerY:Float)
@@ -61,8 +72,8 @@ class Environment
 			// If item is offscreen AND behind player, remove it
 			if (!envItem.isOnScreen() && envItem.y > playerY + FlxG.height)
 			{
-				this.remove(envItem);
-				roadSigns.remove(envItem);
+				envItem.kill();
+				this.roadSigns.remove(envItem, true);
 			}
 		}
 
@@ -71,8 +82,8 @@ class Environment
 			// If item is offscreen AND behind player, remove it
 			if (!envItem.isOnScreen() && envItem.y > playerY + FlxG.height)
 			{
-				this.remove(envItem);
-				crossTracks.remove(envItem);
+				envItem.kill();
+				this.crossTracks.remove(envItem, true);
 			}
 		}
 
@@ -81,8 +92,8 @@ class Environment
 			// If item is offscreen AND behind player, remove it
 			if (!envItem.isOnScreen() && envItem.y > playerY + FlxG.height)
 			{
-				this.remove(envItem);
-				crossRoads.remove(envItem);
+				envItem.kill();
+				this.crossRoads.remove(envItem, true);
 			}
 		}
 
@@ -91,8 +102,8 @@ class Environment
 			// If item is offscreen AND behind player, remove it
 			if (!envItem.isOnScreen() && envItem.y > playerY + FlxG.height)
 			{
-				this.remove(envItem);
-				this.natureClumps.remove(envItem);
+				envItem.kill();
+				this.natureClumps.remove(envItem, true);
 			}
 		}
 	}
@@ -162,24 +173,19 @@ class Environment
 
 				if (newItem.name == "RoadSign")
 				{
-					this.roadSigns.push(cast(newSprite, env.RoadSign));
-					this.add(this.roadSigns[this.roadSigns.length - 1]);
+					this.roadSigns.add(cast(newSprite, env.RoadSign));
 				}
 				else if (newItem.name == "CrossTrack")
 				{
-					this.crossTracks.push(cast(newSprite, env.CrossTrack));
-					this.add(this.crossTracks[this.crossTracks.length - 1]);
+					this.crossTracks.add(cast(newSprite, env.CrossTrack));
 				}
 				else if (newItem.name == "CrossRoad")
 				{
-					this.crossRoads.push(cast(newSprite, env.CrossRoad));
-					this.add(this.crossRoads[this.crossRoads.length - 1]);
+					this.crossRoads.add(cast(newSprite, env.CrossRoad));
 				}
 				else if (newItem.name == "NatureClump")
 				{
-					trace("Created new nature clump");
-					this.natureClumps.push(cast(newSprite, env.NatureClump));
-					this.add(this.natureClumps[this.natureClumps.length - 1]);
+					this.natureClumps.add(cast(newSprite, env.NatureClump));
 				}
 				else
 				{
@@ -305,8 +311,8 @@ class Environment
 	{
 		// Position for new item is within some screen distance ahead of the player
 
-		var yStartRange = Math.round(playerY - (FlxG.height * 2));
-		var yEndRange = Math.round(playerY - (FlxG.height * 3));
+		var yStartRange = Math.round(playerY - (FlxG.height * 3));
+		var yEndRange = Math.round(playerY - (FlxG.height * 5));
 
 		return utils.Math.randRange(yStartRange, yEndRange);
 	}
