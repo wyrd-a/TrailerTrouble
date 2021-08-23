@@ -5,8 +5,8 @@ import flixel.ui.FlxButton;
 import flixel.FlxState;
 import flixel.FlxG;
 import flixel.system.FlxSound;
-import io.newgrounds.NG;
 
+// import io.newgrounds.NG;
 class StartState extends FlxState
 {
 	var buttonSound:FlxSound;
