@@ -15,9 +15,9 @@ import flixel.FlxG;
 import flixel.ui.FlxButton;
 import flixel.FlxState;
 import flixel.util.FlxTimer;
-// import io.newgrounds.NG;
-import env.Environment;
 
+// import io.newgrounds.NG;
+// import env.Environment;
 class PlayState extends FlxState
 {
 	// Pause menu stuff
@@ -135,7 +135,7 @@ class PlayState extends FlxState
 	// Scanline "Filter" (its an image over the whole screen)
 	var scanlines:FlxSprite;
 
-	var env:Environment;
+	// var env:Environment;
 
 	override public function create()
 	{
@@ -160,7 +160,7 @@ class PlayState extends FlxState
 		grindSound = FlxG.sound.load(AssetPaths.grind__wav);
 		crashSound = FlxG.sound.load(AssetPaths.crash__wav);
 
-		this.env = new Environment(add, remove);
+		// this.env = new Environment(add, remove);
 
 		// Bumpers for keeping car on road
 		leftBumper = new Bumpers(160, 0);
@@ -330,7 +330,7 @@ class PlayState extends FlxState
 	// Make stuff happen
 	override public function update(elapsed:Float)
 	{
-		this.env.update(this.player.y);
+		// this.env.update(this.player.y);
 
 		checkVolume();
 		if (FlxG.keys.anyJustReleased([P])) // Check to see if game is paused
@@ -604,20 +604,25 @@ class PlayState extends FlxState
 		{
 			// "May be slow, so use it sparingly." - FlxCollision documentation
 			// Call it every frame! lmao
-			if (!isImmune
-				&& car[i].alive
-				&& (FlxCollision.pixelPerfectCheck(player, car[i]) || FlxCollision.pixelPerfectCheck(trailer, car[i])))
+			if (!isImmune && car[i].alive)
 			{
-				car[i].kill();
-				isImmune = true;
-				carTotal -= 1;
+				if (FlxG.overlap(player, car[i], hitBoxHit)
+					|| FlxG.overlap(trailer, car[i], hitBoxHit)) // KARL CHECK HERE FOR OPTIMIZATION STUFF
+				{
+					if (FlxCollision.pixelPerfectCheck(player, car[i]) || FlxCollision.pixelPerfectCheck(trailer, car[i]))
+					{
+						car[i].kill();
+						isImmune = true;
+						carTotal -= 1;
 
-				// Particle explosion
-				carExplode.x = car[i].x + (car[i].width / 2);
-				carExplode.y = car[i].y + (car[i].height / 2);
+						// Particle explosion
+						carExplode.x = car[i].x + (car[i].width / 2);
+						carExplode.y = car[i].y + (car[i].height / 2);
+					}
+				}
 			}
 			// Check to see if car is passed offscreen
-			else if (car[i].y > player.y + 800 && !isWin)
+			if (car[i].y > player.y + 800 && !isWin)
 			{
 				car[i].kill();
 				carTotal -= 1;
@@ -858,7 +863,7 @@ class PlayState extends FlxState
 			losescreen.reset(400 - (winscreen.width / 2), uiCamera.scroll.y + 238);
 			loseText.reset(220, uiCamera.scroll.y + 300);
 			loseText.size = 20;
-			loseText.text = "You made it " + -1 * Math.round(player.y) + " Distance!";
+			loseText.text = "You made it " + (-1 * Math.round(player.y / WINDIST * 100)) + "% of the way!";
 			restartButton.reset(218, 514);
 			menuButton.reset(506, 514);
 		}
@@ -919,5 +924,10 @@ class PlayState extends FlxState
 	{
 		buttonSound.stop();
 		buttonSound.play();
+	}
+
+	function hitBoxHit(objA, objB)
+	{
+		return 1;
 	}
 }
