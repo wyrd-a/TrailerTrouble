@@ -592,28 +592,33 @@ class PlayState extends FlxState
 	function carCollide()
 	{
 		isImmune = false;
+		FlxG.worldBounds.set(0, uiCamera.scroll.y, FlxG.width, FlxG.height);
 		for (i in 0...carMax)
 		{
 			// "May be slow, so use it sparingly." - FlxCollision documentation
 			// Call it every frame! lmao
-			if (!isImmune
-				&& car[i].alive
-				&& (FlxCollision.pixelPerfectCheck(player, car[i]) || FlxCollision.pixelPerfectCheck(trailer, car[i])))
-			{
-				car[i].kill();
-				isImmune = true;
-				carTotal -= 1;
+			if (!isImmune && car[i].alive)
+				if (FlxG.overlap(player, car[i], hitBoxHit) || FlxG.overlap(trailer, car[i], hitBoxHit))
+				{
+					if (FlxCollision.pixelPerfectCheck(player, car[i]) || FlxCollision.pixelPerfectCheck(trailer, car[i]))
+					{
+						{
+							car[i].kill();
+							isImmune = true;
+							carTotal -= 1;
 
-				// Particle explosion
-				carExplode.x = car[i].x + (car[i].width / 2);
-				carExplode.y = car[i].y + (car[i].height / 2);
-			}
-			// Check to see if car is passed offscreen
-			else if (car[i].y > player.y + 800 && !isWin)
-			{
-				car[i].kill();
-				carTotal -= 1;
-			}
+							// Particle explosion
+							carExplode.x = car[i].x + (car[i].width / 2);
+							carExplode.y = car[i].y + (car[i].height / 2);
+						}
+					}
+				}
+				// Check to see if car is passed offscreen
+				else if (car[i].y > player.y + 800 && !isWin)
+				{
+					car[i].kill();
+					carTotal -= 1;
+				}
 		}
 		if (isImmune) // Check if car hit
 		{
@@ -854,6 +859,11 @@ class PlayState extends FlxState
 			restartButton.reset(218, 514);
 			menuButton.reset(506, 514);
 		}
+	}
+
+	function hitBoxHit(objA, objB)
+	{
+		return 1;
 	}
 
 	// Button Functions
