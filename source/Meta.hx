@@ -9,6 +9,7 @@ class Meta extends FlxSprite
 	public static var playerDist:Float;
 	public static var isMusicMuted:Bool;
 	public static var isSFXMuted:Bool;
+	public static var isOutOfControl:Bool;
 
 	public function new()
 	{

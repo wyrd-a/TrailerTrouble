@@ -55,16 +55,16 @@ class Player extends FlxSprite
 		}
 		if (right || left)
 		{
-			if (right)
+			if (right && !Meta.isOutOfControl)
 			{
 				angle += ANGLECHANGE;
 			}
-			else if (left)
+			else if (left && !Meta.isOutOfControl)
 			{
 				angle -= ANGLECHANGE;
 			}
 		}
-		if (up)
+		if (up && !Meta.isOutOfControl)
 		{
 			speed += 4;
 		}
@@ -74,11 +74,11 @@ class Player extends FlxSprite
 		{
 			speed = MAXSPEED;
 		}
-		else if (space)
+		else if (space && !Meta.isOutOfControl)
 		{
 			speed -= 40;
 		}
-		else if (down)
+		else if (down && !Meta.isOutOfControl)
 		{
 			speed -= 20;
 		}

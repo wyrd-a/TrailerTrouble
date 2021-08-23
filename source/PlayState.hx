@@ -1,29 +1,21 @@
 package;
 
-import haxe.display.Display.DeterminePackageResult;
-import flixel.FlxCamera;
+import flixel.input.FlxAccelerometer;
 import flixel.FlxSprite;
-import js.html.ScreenOrientation;
-import openfl.display.Shader;
-import js.html.AbortController;
-import flixel.animation.FlxBaseAnimation;
 import flixel.text.FlxText;
 import Math;
-import flixel.FlxG;
-import flixel.FlxState;
-import flixel.addons.display.FlxBackdrop;
 import flixel.math.FlxPoint;
 import flixel.util.FlxCollision;
 import flixel.util.FlxColor;
 import flixel.effects.particles.FlxEmitter;
-import flixel.effects.particles.FlxParticle;
 import flixel.system.FlxSound;
 import flixel.addons.display.FlxBackdrop;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.ui.FlxButton;
 import flixel.FlxState;
-import openfl.filters.BitmapFilter;
+import flixel.util.FlxTimer;
+// import io.newgrounds.NG;
 import env.Environment;
 
 class PlayState extends FlxState
@@ -45,11 +37,23 @@ class PlayState extends FlxState
 	var pauseCarY:Array<Float> = new Array();
 	var screenDarken:FlxSprite;
 
+	// Win stuff
+	var winscreen:FlxSprite;
+	var winText:FlxText;
+	var menuButton:FlxButton;
+	var isWinMenu:Bool;
+
+	// Lose stuff
+	var losescreen:FlxSprite;
+	var loseText:FlxText;
+	var isLose:Bool = false;
+
 	var player:Player;
 	var trailer:Trailer;
 
 	// Game winning stuff
 	var WINDIST:Float = 100000;
+
 	var isWin:Bool = false;
 	var winCounter:Float = 0;
 	var winImmune:Bool;
@@ -57,6 +61,7 @@ class PlayState extends FlxState
 	// Particle effects
 	var sparks:FlxEmitter;
 	var carExplode:FlxEmitter;
+	var confetti:FlxEmitter;
 
 	// Sound stuff
 	var isGrinding:Bool = false;
@@ -64,16 +69,20 @@ class PlayState extends FlxState
 	var MainTheme:FlxSound;
 	var crashSound:FlxSound;
 	var PauseTheme:FlxSound;
+	var buttonSound:FlxSound;
 
 	// Displays
-	var speedDisp:FlxText = new FlxText(0, 0);
-	var distDisp:FlxText;
 	var speedometer:FlxSprite;
 	var speedNeedle:FlxSprite;
 	// Timer variables
 	var MAXTIME:Float = 180; // In seconds
-	var currentTime:Float = 0; // Keep track of time
+	var currentTime:FlxTimer; // Keep track of time
 	var timerDisp:FlxText; // Display at the top
+	var timerDisplay:FlxSprite;
+	var faster:FlxSprite;
+	// Distance Tape
+	var miniCar:FlxSprite;
+	var miniRoad:FlxSprite;
 
 	// Box positioning variables
 	var playerHealth:Int = 4;
@@ -117,19 +126,31 @@ class PlayState extends FlxState
 	var trailerX:Float;
 	var trailerY:Float;
 
-	// Environment variables
-	var env:env.Environment;
-
-	// Side of Road stuff
-	// var RoadSign:Array<RoadSigns> = new Array();
 	// Camera
 	var uiCamera:FlxCamera;
+
+	// fade to black
+	var fadeToBlack:FlxSprite;
 
 	// Scanline "Filter" (its an image over the whole screen)
 	var scanlines:FlxSprite;
 
+	var env:Environment;
+
 	override public function create()
 	{
+		// Newgrounds stuff!
+		// NG.create(APIKeys.APIid);
+		// NG.core.initEncryption(APIKeys.APIkey, io.newgrounds.crypto.Cipher.RC4, io.newgrounds.crypto.EncryptionFormat.BASE_64);
+		// var winnerMedal = NG.core.medals.get(APIKeys.winnerID);
+		// var fasterMedal = NG.core.medals.get(APIKeys.fasterID);
+
+		buttonSound = new FlxSound();
+		buttonSound = new FlxSound();
+		buttonSound = FlxG.sound.load(AssetPaths.button_push__wav);
+		currentTime = new FlxTimer().start(500, null, 0);
+		currentTime.reset();
+		FlxG.updateFramerate = 60;
 		// Sound stuff
 		PauseTheme = FlxG.sound.load(AssetPaths.PauseTheme__ogg);
 		PauseTheme.looped = true;
@@ -151,7 +172,7 @@ class PlayState extends FlxState
 		add(bg);
 
 		// Player
-		player = new Player(324, 0);
+		player = new Player(402 - 37, 0);
 		add(player);
 		Player.speed = Player.STARTSPEED;
 
@@ -178,67 +199,89 @@ class PlayState extends FlxState
 		{
 			car[i] = new Cars(1000, -500); // Very important that this starts offscreen
 			add(car[i]);
-
 			car[i].kill();
 		}
 
-		// Roadsigns
-		// for (i in 0...50) // Just testing how the signs look at speed
-		// {
-		// 	// RoadSign[i] = new RoadSigns(700, -360 * i);
-		// 	// add(RoadSign[i]);
-		// 	trace(i);
-		// }
-
 		// Particle effects
-		sparks = new FlxEmitter(10, 10, 200);
+		sparks = new FlxEmitter(1000, 1000, 200);
 		sparks.makeParticles(2, 2, FlxColor.WHITE, 200);
 		add(sparks);
 		sparks.start(false, .01);
 
-		carExplode = new FlxEmitter(2, 2, 200);
+		carExplode = new FlxEmitter(1000, 1000, 200);
 		carExplode.makeParticles(4, 4, FlxColor.ORANGE, 400);
 		carExplode.speed.set(25, 800, 100, 425);
 		add(carExplode);
-		carExplode.start(false);
 		carExplode.color.set(0xf9c22b, 0xf79617, 0xffffff);
 
-		// Timer
-		timerDisp = new FlxText(0, 0);
-		timerDisp.size = 20;
-		add(timerDisp);
-
 		// Info Displays
-		speedDisp = new FlxText(0, 0);
-		distDisp = new FlxText(0, 0);
-		speedDisp.bold = true;
-		distDisp.bold = true;
-		speedDisp.size = 20;
-		distDisp.size = 20;
-		add(speedDisp);
-		add(distDisp);
 		speedometer = new FlxSprite(0, 0);
 		speedometer.loadGraphic(AssetPaths.speed__png);
 		add(speedometer);
 		speedNeedle = new FlxSprite(0, 0);
 		speedNeedle.loadGraphic(AssetPaths.speedNeedle__png);
 		add(speedNeedle);
+		timerDisplay = new FlxSprite(0, 0);
+		timerDisplay.loadGraphic(AssetPaths.timer__png);
+		add(timerDisplay);
+		timerDisp = new FlxText(53, 0);
+		timerDisp.size = 40;
+		add(timerDisp);
+		faster = new FlxSprite(0, 0).loadGraphic(AssetPaths.faster__png);
+		add(faster);
+		faster.kill();
+		miniCar = new FlxSprite(0, 0).loadGraphic(AssetPaths.miniCar__png);
+		miniRoad = new FlxSprite(0, 0).loadGraphic(AssetPaths.miniRoad__png);
+		add(miniRoad);
+		add(miniCar);
 
 		uiCamera = new FlxCamera(0, 0);
 		FlxG.cameras.add(uiCamera);
 
 		super.create();
 
-		// Pause menu initialization
+		// fade to black initialization
+		fadeToBlack = new FlxSprite(0, 0);
+		fadeToBlack.loadGraphic(AssetPaths.fadetoblack__png);
+		add(fadeToBlack);
+		fadeToBlack.alpha = 0;
+
+		// Screen darkening
 		screenDarken = new FlxSprite(0, 0);
 		screenDarken.loadGraphic(AssetPaths.dark_filter__png);
 		add(screenDarken);
 		screenDarken.kill();
+
+		// Win screen background and text (and confetti)
+		winscreen = new FlxSprite(0, 0);
+		winscreen.loadGraphic(AssetPaths.winScreen__png);
+		add(winscreen);
+		winscreen.kill();
+		winText = new FlxText(0, 0);
+		add(winText);
+		winText.kill();
+		confetti = new FlxEmitter(10000, 10000);
+		confetti.makeParticles(4, 4, FlxColor.BLUE, 400);
+		confetti.color.set(FlxColor.BLUE, FlxColor.PURPLE);
+		confetti.speed.set(25, 800, 100, 425);
+		add(confetti);
+
+		// Lose Screen stuff
+		losescreen = new FlxSprite(0, 0);
+		losescreen.loadGraphic(AssetPaths.LOSE__png);
+		add(losescreen);
+		losescreen.kill();
+		loseText = new FlxText(0, 0);
+		add(loseText);
+		loseText.kill();
+
+		// Pause menu background
 		pauseMenuBackground = new FlxSprite(0, 0);
 		pauseMenuBackground.loadGraphic(AssetPaths.PAUSED_WINDOW__png);
 		add(pauseMenuBackground);
-
 		pauseMenuBackground.kill();
+
+		// Menu buttons
 		restartButton = new FlxButton(0, 0, "", restartGame);
 		musicButton = new FlxButton(0, 0, "", muteMusic);
 		resumeButton = new FlxButton(0, 0, "", resumeGame);
@@ -249,17 +292,21 @@ class PlayState extends FlxState
 		resumeButton.loadGraphic(AssetPaths.RESUME__png, true, 76, 50);
 		sfxButton.loadGraphic(AssetPaths.uncheckedSFX__png);
 		fullscreenButton.loadGraphic(AssetPaths.uncheckedFS__png);
+		menuButton = new FlxButton(0, 0, "", menuSwap);
+		menuButton.loadGraphic(AssetPaths.startArrow__png, true, 76, 50);
 
 		add(restartButton);
 		add(musicButton);
 		add(resumeButton);
 		add(sfxButton);
 		add(fullscreenButton);
+		add(menuButton);
 		restartButton.kill();
 		musicButton.kill();
 		resumeButton.kill();
 		sfxButton.kill();
 		fullscreenButton.kill();
+		menuButton.kill();
 
 		// Pause menu state tracking (state of the art)
 		for (i in 0...carMax)
@@ -294,6 +341,9 @@ class PlayState extends FlxState
 		{
 			if (isMenu)
 			{
+				MainTheme.play();
+				PauseTheme.pause();
+				MainTheme.time = PauseTheme.time;
 				screenDarken.kill();
 				restartButton.kill();
 				musicButton.kill();
@@ -303,13 +353,8 @@ class PlayState extends FlxState
 				pauseMenuBackground.kill();
 				isMenu = false;
 			}
+			Meta.isOutOfControl = false;
 			timerUpdate();
-			distDisp.text = "Distance: " + Math.round(-1 * player.y);
-			speedDisp.text = "Speed: " + (Player.speed);
-			speedDisp.y = player.y + 300;
-			distDisp.y = player.y - 24 + 300;
-			distDisp.x = 0;
-			speedDisp.x = 0;
 
 			// Puts the player directly below center screen
 			uiCamera.scroll.x = 0;
@@ -354,8 +399,9 @@ class PlayState extends FlxState
 			boxKiller(boxThree);
 			boxKiller(boxFour);
 		}
-		else if (!isPaused) // Win game! Yay!
+		else if (player.y < -1 * WINDIST) // Win game! Yay!
 		{
+			Meta.isOutOfControl = true;
 			if (!isWin)
 			{
 				isWin = true;
@@ -365,6 +411,7 @@ class PlayState extends FlxState
 			}
 			super.update(elapsed);
 			winImmune = carCollide();
+			preventCarsFromHittingEachother();
 			if (winImmune)
 			{
 				playerHealth += 1;
@@ -395,19 +442,24 @@ class PlayState extends FlxState
 			}
 			uiCamera.scroll.y = player.y + winCounter - 450;
 			scanlines.y = uiCamera.scroll.y;
+			meterMove();
 			winCounter += 5;
 			if (winCounter > 150 * 5)
 			{
 				winGame(); // Win game
 			}
 		}
-		else // Pause menu goes here
+		else if (player.alive) // Pause menu goes here
 		{
+			Meta.isOutOfControl = true;
 			if (!isMenu)
 			{
+				MainTheme.pause();
+				PauseTheme.play();
+				PauseTheme.time = MainTheme.time;
 				isMenu = true;
 				screenDarken.reset(0, uiCamera.scroll.y);
-				pauseMenuBackground.reset(400 - (pauseMenuBackground.width / 2), player.y - 200);
+				pauseMenuBackground.reset(400 - (pauseMenuBackground.width / 2), uiCamera.scroll.y + 238);
 				fullscreenButton.reset(472, 300);
 				sfxButton.reset(472, 349);
 				musicButton.reset(472, 396);
@@ -491,6 +543,7 @@ class PlayState extends FlxState
 		for (i in 0...carMax)
 		{
 			for (j in 0...carMax)
+			{
 				if (car[i].x + (car[i].width / 2) == car[j].x + (car[j].width / 2)) // See if cars are in the same lane
 				{
 					if (car[i].y - car[j].y < 50 + car[j].height && car[i].y - car[j].y > 0) // See if cars are too close
@@ -498,6 +551,7 @@ class PlayState extends FlxState
 						car[i].velocity.set(0, car[j].velocity.y);
 					}
 				}
+			}
 		}
 	}
 
@@ -563,7 +617,7 @@ class PlayState extends FlxState
 				carExplode.y = car[i].y + (car[i].height / 2);
 			}
 			// Check to see if car is passed offscreen
-			else if (car[i].y > player.y + 800)
+			else if (car[i].y > player.y + 800 && !isWin)
 			{
 				car[i].kill();
 				carTotal -= 1;
@@ -573,6 +627,7 @@ class PlayState extends FlxState
 		{
 			carExplode.speed.set(1, 10000);
 			carExplode.start(true, 0, 0);
+			crashSound.stop();
 			crashSound.play();
 			playerHealth -= 1;
 		}
@@ -595,8 +650,7 @@ class PlayState extends FlxState
 		if (playerHealth <= 0)
 		{
 			boxSpin(boxOne);
-			Meta.playerDist = Math.round(player.y);
-			FlxG.switchState(new LoseState());
+			loseGame();
 		}
 		else if (playerHealth == 1)
 		{
@@ -614,30 +668,38 @@ class PlayState extends FlxState
 
 	function winGame()
 	{
-		if (player.y * -1 >= WINDIST)
+		if (!isWinMenu)
 		{
-			Meta.playerTime = currentTime;
-			FlxG.switchState(new WinState());
+			winscreen.reset(400 - (winscreen.width / 2), uiCamera.scroll.y + 238);
+			winText.text = "You made it in " + Math.round(currentTime.elapsedTime * 100) / 100 + " Seconds!";
+			winText.reset(220, uiCamera.scroll.y + 300);
+			winText.size = 20;
+			restartButton.reset(218, 514);
+			menuButton.reset(506, 514);
+			isWinMenu = !isWinMenu;
+			confetti.emitting = true;
+			confetti.start(true);
 		}
+		winscreen.y = uiCamera.scroll.y + 238;
+		winText.y = uiCamera.scroll.y + 330;
+		confetti.x = 400;
+		confetti.y = uiCamera.scroll.y + 450;
 	}
 
 	function timerUpdate()
 	{
-		currentTime += 1 / 30; // Karl plz help the whole game is tied to framerate and thats bad design
-		if (-player.velocity.y * (MAXTIME - currentTime) < WINDIST + player.y) // Check to see if player is too slow to complete course
+		if (-player.velocity.y * (MAXTIME - currentTime.elapsedTime) < WINDIST + player.y) // Check to see if player is too slow to complete course
 		{
-			timerDisp.color = FlxColor.RED;
-			// Also wanna make a "TOO SLOW" popup or something idk, we'll get art for it
+			faster.revive();
 		}
 		else
 		{
-			timerDisp.color = FlxColor.WHITE;
+			faster.kill();
 		}
-		timerDisp.text = "Time: " + Math.round(MAXTIME - currentTime); // update timer display
-		timerDisp.y = player.y - 100; // Keep timer onscreen
-		if (currentTime >= MAXTIME) // See if time has run out
+		timerDisp.text = Std.string(Math.round(MAXTIME - currentTime.elapsedTime)); // update timer display
+		if (currentTime.elapsedTime >= MAXTIME) // See if time has run out
 		{
-			FlxG.switchState(new LoseState());
+			loseGame();
 		}
 	}
 
@@ -649,7 +711,7 @@ class PlayState extends FlxState
 
 		if (FlxG.collide(player, leftBumper))
 		{
-			// leftBumper.color = FlxColor.BLUE;
+			Player.speed -= 5;
 			sparks.emitting = true;
 			sparks.x = player.x;
 			sparks.y = player.y + 10;
@@ -657,6 +719,7 @@ class PlayState extends FlxState
 		}
 		else if (FlxG.collide(player, rightBumper))
 		{
+			Player.speed -= 5;
 			rightBumper.color = FlxColor.WHITE;
 			sparks.emitting = true;
 			sparks.x = player.x + player.width;
@@ -667,7 +730,6 @@ class PlayState extends FlxState
 		{
 			grindSound.stop();
 			rightBumper.color = FlxColor.GREEN;
-			// leftBumper.color = FlxColor.RED;
 			sparks.emitting = false;
 		}
 		rightBumper.y = player.y - 100;
@@ -693,31 +755,50 @@ class PlayState extends FlxState
 		speedometer.x = scanlines.x + 800 - speedometer.width;
 		speedometer.y = scanlines.y + 900 - speedometer.height;
 
+		faster.setPosition(speedometer.x + 71, speedometer.y + 149);
+
 		// Needle angle control
 		speedNeedle.angle = (Player.speed - ((Player.MINSPEED + Player.MAXSPEED) / 2)) * (260 / (-Player.MINSPEED + Player.MAXSPEED));
-		speedNeedle.x = speedometer.x + 102 - (speedNeedle.width / 2);
-		speedNeedle.y = speedometer.y + 102 - (speedNeedle.height / 2);
+		speedNeedle.x = speedometer.x + 102 + (33 * Math.sin(speedNeedle.angle / 180 * Math.PI)) - (speedNeedle.width / 2);
+		speedNeedle.y = speedometer.y + 102 - (33 * Math.cos(speedNeedle.angle / 180 * Math.PI)) - (speedNeedle.height / 2);
+
+		timerDisplay.y = scanlines.y + 900 - timerDisplay.height;
+		timerDisp.y = timerDisplay.y + 87;
+
+		miniRoad.setPosition(50, scanlines.y + 100);
+		if (!isWin)
+		{
+			miniCar.setPosition(40, scanlines.y + 100 + 510 * ((WINDIST + player.y) / WINDIST));
+		}
+		else
+		{
+			miniCar.setPosition(40, scanlines.y + 100);
+		}
 	}
 
 	function checkVolume()
 	{
 		if (Meta.isMusicMuted)
 		{
+			PauseTheme.volume = 0;
 			MainTheme.volume = 0;
 		}
 		else
 		{
+			PauseTheme.volume = 1;
 			MainTheme.volume = 1;
 		}
 		if (Meta.isSFXMuted)
 		{
 			grindSound.volume = 0;
 			crashSound.volume = 0;
+			buttonSound.volume = 0;
 		}
 		else
 		{
 			grindSound.volume = 1;
 			crashSound.volume = 1;
+			buttonSound.volume = 1;
 		}
 		if (!FlxG.fullscreen)
 		{
@@ -745,14 +826,54 @@ class PlayState extends FlxState
 		}
 	}
 
+	function loseGame()
+	{
+		if (player.alive)
+		{
+			crashSound.stop();
+			crashSound.play();
+			boxSpin(boxFour);
+			boxSpin(boxThree);
+			boxSpin(boxTwo);
+			boxSpin(boxOne);
+			playerHealth = 0;
+			currentTime.cancel();
+			carExplode.x = player.x + (player.width / 2);
+			carExplode.y = player.y + (player.height / 2);
+			carExplode.start(true, 0, 0);
+			player.kill();
+			trailer.kill();
+		}
+		if (fadeToBlack.alpha < 1)
+		{
+			fadeToBlack.alpha += 0.01;
+			fadeToBlack.y = uiCamera.scroll.y;
+		}
+		else if (!isLose) // Lose Screen
+		{
+			MainTheme.pause();
+			PauseTheme.play();
+			PauseTheme.time = MainTheme.time;
+			isLose = true;
+			losescreen.reset(400 - (winscreen.width / 2), uiCamera.scroll.y + 238);
+			loseText.reset(220, uiCamera.scroll.y + 300);
+			loseText.size = 20;
+			loseText.text = "You made it " + -1 * Math.round(player.y) + " Distance!";
+			restartButton.reset(218, 514);
+			menuButton.reset(506, 514);
+		}
+	}
+
 	// Button Functions
 	function restartGame()
 	{
+		pushButton();
 		FlxG.switchState(new PlayState());
 	}
 
 	function muteSFX()
 	{
+		pushButton();
 		if (Meta.isSFXMuted)
 		{
 			Meta.isSFXMuted = false;
@@ -765,16 +886,19 @@ class PlayState extends FlxState
 
 	function fullScreen()
 	{
+		pushButton();
 		FlxG.fullscreen = !FlxG.fullscreen;
 	}
 
 	function resumeGame()
 	{
+		pushButton();
 		isPaused = false;
 	}
 
 	function muteMusic()
 	{
+		pushButton();
 		if (Meta.isMusicMuted)
 		{
 			Meta.isMusicMuted = false;
@@ -783,5 +907,17 @@ class PlayState extends FlxState
 		{
 			Meta.isMusicMuted = true;
 		}
+	}
+
+	function menuSwap()
+	{
+		pushButton();
+		FlxG.switchState(new StartState());
+	}
+
+	function pushButton()
+	{
+		buttonSound.stop();
+		buttonSound.play();
 	}
 }
