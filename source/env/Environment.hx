@@ -57,9 +57,6 @@ class Environment
 	{
 		this.removeOffscreen(playerY);
 		this.makeNewEnvItem(Math.round(playerY));
-
-		trace("roadSigns", this.roadSigns.length);
-		trace("natureClumps", this.natureClumps.length);
 	}
 
 	private function removeOffscreen(playerY:Float)

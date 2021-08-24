@@ -17,6 +17,7 @@ import flixel.FlxState;
 import flixel.util.FlxTimer;
 import env.Environment;
 import utils.Math.randRange;
+import ApiWrapper;
 
 // import env.Environment;
 class PlayState extends FlxState
@@ -53,7 +54,7 @@ class PlayState extends FlxState
 	var trailer:Trailer;
 
 	// Game winning stuff
-	var WINDIST:Float = 100000;
+	var WINDIST:Float = 1000;
 
 	var isWin:Bool = false;
 	var winCounter:Float = 0;
@@ -687,11 +688,12 @@ class PlayState extends FlxState
 	{
 		if (!isWinMenu)
 		{
-			NGio.postScore(Std.int(currentTime.elapsedTime * 100), "Fastest Completion");
-			NGio.unlockMedal(64830);
+			// ApiWrapper.postScore(Std.int(currentTime.elapsedTime * 100), "Fastest Completion");
+			ApiWrapper.postScore(Std.int(currentTime.elapsedTime * 1000), "Fastest Completion");
+			ApiWrapper.unlockMedal(64830);
 			if (currentTime.elapsedTime < 90)
 			{
-				NGio.unlockMedal(64831);
+				ApiWrapper.unlockMedal(64831);
 			}
 			winscreen.reset(400 - (winscreen.width / 2), uiCamera.scroll.y + 238);
 			winText.text = "You made it in " + Math.round(currentTime.elapsedTime * 100) / 100 + " Seconds!";

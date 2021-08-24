@@ -1,9 +1,11 @@
 package;
 
+import io.newgrounds.crypto.Rc4;
 import flixel.FlxG;
 import flixel.util.FlxSignal;
 import flixel.util.FlxTimer;
 import io.newgrounds.NG;
+// import io.newgrounds.crypto.Rc4;
 import io.newgrounds.components.ScoreBoardComponent.Period;
 import io.newgrounds.objects.Medal;
 import io.newgrounds.objects.Score;
@@ -13,13 +15,14 @@ import io.newgrounds.objects.events.Result.GetCurrentVersionResult;
 import io.newgrounds.objects.events.Result.GetVersionResult;
 import lime.app.Application;
 import openfl.display.Stage;
+import ApiKeys;
 
 using StringTools;
 
 /**
  * MADE BY GEOKURELI THE LEGENED GOD HERO MVP
  */
-class NGio
+class ApiWrapper
 {
 	public static var isLoggedIn:Bool = false;
 	public static var scoreboardsLoaded:Bool = false;
@@ -58,94 +61,68 @@ class NGio
 		}
 	}
 
-	public function new(api:String, encKey:String, ?sessionId:String)
+	public function new()
 	{
-		trace("connecting to newgrounds");
+		trace("Attempting to connect to newgrounds");
 
-		NG.createAndCheckSession(APIKeys.APIid, sessionId);
-
+		NG.createAndCheckSession(ApiKeys.ApiId);
 		NG.core.verbose = true;
-		// Set the encryption cipher/format to RC4/Base64. AES128 and Hex are not implemented yet
-		NG.core.initEncryption(APIKeys.APIkey); // Found in you NG project view
+		NG.core.initEncryption(ApiKeys.ApiKey);
 
 		trace(NG.core.attemptingLogin);
 
 		if (NG.core.attemptingLogin)
 		{
-			/* a session_id was found in the loadervars, this means the user is playing on newgrounds.com
-			 * and we should login shortly. lets wait for that to happen
-			 */
 			trace("attempting login");
 			NG.core.onLogin.add(onNGLogin);
 		}
 		else
 		{
-			/* They are NOT playing on newgrounds.com, no session id was found. We must start one manually, if we want to.
-			 * Note: This will cause a new browser window to pop up where they can log in to newgrounds
-			 */
 			NG.core.requestLogin(onNGLogin);
 		}
 	}
 
 	function onNGLogin():Void
 	{
-		trace('logged in! user:${NG.core.user.name}');
+		trace('Logged in! User:${NG.core.user.name}');
 		isLoggedIn = true;
 		FlxG.save.data.sessionId = NG.core.sessionId;
-		// FlxG.save.flush();
-		// Load medals then call onNGMedalFetch()
-		NG.core.requestMedals(onNGMedalFetch);
 
-		// Load Scoreboards hten call onNGBoardsFetch()
+		NG.core.requestMedals(onNGMedalFetch);
 		NG.core.requestScoreBoards(onNGBoardsFetch);
 
 		ngDataLoaded.dispatch();
 	}
 
-	// --- MEDALS
 	function onNGMedalFetch():Void
 	{
-		/*
-			// Reading medal info
-			for (id in NG.core.medals.keys())
-			{
-				var medal = NG.core.medals.get(id);
-				trace('loaded medal id:$id, name:${medal.name}, description:${medal.description}');
-			}
-			// Unlocking medals
-			var unlockingMedal = NG.core.medals.get(54352);// medal ids are listed in your NG project viewer
-			if (!unlockingMedal.unlocked)
-				unlockingMedal.sendUnlock();
-		 */
+		trace("Reading medals...");
+		for (id in NG.core.medals.keys())
+		{
+			var medal = NG.core.medals.get(id);
+			trace('loaded medal id:$id, name:${medal.name}, description:${medal.description}');
+		}
+		NG.core.medals.get(ApiKeys.winnerID);
+		NG.core.medals.get(ApiKeys.fasterID);
 	}
 
-	// --- SCOREBOARDS
 	function onNGBoardsFetch():Void
 	{
-		/*
-			// Reading medal info
-			for (id in NG.core.scoreBoards.keys())
-			{
-				var board = NG.core.scoreBoards.get(id);
-				trace('loaded scoreboard id:$id, name:${board.name}');
-			}
-		 */
-		// var board = NG.core.scoreBoards.get(8004);// ID found in NG project view
+		trace("Reading scoreboards...");
 
-		// Posting a score thats OVER 9000!
-		// board.postScore(FlxG.random.int(0, 1000));
-
-		// --- To view the scores you first need to select the range of scores you want to see ---
-
-		// add an update listener so we know when we get the new scores
+		for (id in NG.core.scoreBoards.keys())
+		{
+			var board = NG.core.scoreBoards.get(id);
+			trace('loaded scoreboard id:$id, name:${board.name}');
+		}
+		// var board = NG.core.scoreBoards.get(8004); // ID found in NG project view
 		// board.onUpdate.add(onNGScoresFetch);
-		trace("shoulda got score by NOW!");
-		// board.requestScores(20);// get the best 10 scores ever logged
-		// more info on scores --- http://www.newgrounds.io/help/components/#scoreboard-getscores
 	}
 
 	inline static public function postScore(score:Int = 0, song:String)
 	{
+		trace("Posting score");
+
 		if (isLoggedIn)
 		{
 			for (id in NG.core.scoreBoards.keys())
@@ -154,31 +131,28 @@ class NGio
 
 				if (song == board.name)
 				{
-					board.postScore(score, "Uhh meow?");
+					trace("Posted score:", score);
+					trace("Attempting to post score to " + song);
+					board.postScore(score, "Fastest Completion");
 				}
-
-				// trace('loaded scoreboard id:$id, name:${board.name}');
 			}
 		}
 	}
 
-	function onNGScoresFetch():Void
-	{
-		scoreboardsLoaded = true;
-
-		ngScoresLoaded.dispatch();
-		/* 
-			for (score in NG.core.scoreBoards.get(8737).scores)
-			{
-				trace('score loaded user:${score.user.name}, score:${score.formatted_value}');
-			}
-		 */
-
-		// var board = NG.core.scoreBoards.get(8004);// ID found in NG project view
-		// board.postScore(HighScore.score);
-
-		// NGio.scoreboardArray = NG.core.scoreBoards.get(8004).scores;
-	}
+	// function onNGScoresFetch():Void
+	// {
+	// 	scoreboardsLoaded = true;
+	// 	ngScoresLoaded.dispatch();
+	// 	/*
+	// 		for (score in NG.core.scoreBoards.get(8737).scores)
+	// 		{
+	// 			trace('score loaded user:${score.user.name}, score:${score.formatted_value}');
+	// 		}
+	// 	 */
+	// 	// var board = NG.core.scoreBoards.get(8004);// ID found in NG project view
+	// 	// board.postScore(HighScore.score);
+	// 	// NGio.scoreboardArray = NG.core.scoreBoards.get(8004).scores;
+	// }
 
 	inline static public function logEvent(event:String)
 	{
@@ -188,11 +162,11 @@ class NGio
 
 	inline static public function unlockMedal(id:Int)
 	{
+		trace("Unlocking medal...");
 		if (isLoggedIn)
 		{
 			var medal = NG.core.medals.get(id);
-			if (!medal.unlocked)
-				medal.sendUnlock();
+			medal.sendUnlock();
 		}
 	}
 }

@@ -5,6 +5,7 @@ import flixel.ui.FlxButton;
 import flixel.FlxState;
 import flixel.FlxG;
 import flixel.system.FlxSound;
+import ApiWrapper;
 
 // import io.newgrounds.NG;
 class StartState extends FlxState
@@ -44,6 +45,7 @@ class StartState extends FlxState
 
 	override public function create():Void
 	{
+		new ApiWrapper();
 		buttonSound = FlxG.sound.load(AssetPaths.button_push__wav);
 		introVoice = new FlxSound();
 		introVoice = FlxG.sound.load(AssetPaths.IntroVoice__wav);
