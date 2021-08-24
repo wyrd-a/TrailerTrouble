@@ -16,6 +16,7 @@ import flixel.ui.FlxButton;
 import flixel.FlxState;
 import flixel.util.FlxTimer;
 import env.Environment;
+import utils.Math.randRange;
 
 // import env.Environment;
 class PlayState extends FlxState
@@ -75,7 +76,7 @@ class PlayState extends FlxState
 	var speedometer:FlxSprite;
 	var speedNeedle:FlxSprite;
 	// Timer variables
-	var MAXTIME:Float = 180; // In seconds
+	var MAXTIME:Float = 100; // In seconds
 	var currentTime:FlxTimer; // Keep track of time
 	var timerDisp:FlxText; // Display at the top
 	var timerDisplay:FlxSprite;
@@ -258,8 +259,21 @@ class PlayState extends FlxState
 		add(winText);
 		winText.kill();
 		confetti = new FlxEmitter(10000, 10000);
-		confetti.makeParticles(4, 4, FlxColor.BLUE, 400);
-		confetti.color.set(FlxColor.BLUE, FlxColor.PURPLE);
+
+		var colors = [
+			FlxColor.BLUE,
+			FlxColor.RED,
+			FlxColor.GREEN,
+			FlxColor.PURPLE,
+			FlxColor.ORANGE,
+			FlxColor.PINK,
+			FlxColor.YELLOW
+		];
+		var chosenColor1 = colors[utils.Math.randRange(0, colors.length - 1)];
+		var chosenColor2 = colors[utils.Math.randRange(0, colors.length - 1)];
+
+		confetti.makeParticles(4, 4, chosenColor1, 400);
+		confetti.color.set(chosenColor1, chosenColor2);
 		confetti.speed.set(25, 800, 100, 425);
 		add(confetti);
 
@@ -327,7 +341,7 @@ class PlayState extends FlxState
 	// Make stuff happen
 	override public function update(elapsed:Float)
 	{
-		this.env.update(this.player.y);
+		this.env.update(uiCamera.scroll.y);
 
 		checkVolume();
 		if (FlxG.keys.anyJustReleased([P])) // Check to see if game is paused
@@ -405,6 +419,7 @@ class PlayState extends FlxState
 				pausePlayerSpeed = Player.speed;
 				pausePlayerAngle = player.angle;
 				pausePlayerX = player.x;
+				currentTime.active = false;
 			}
 			super.update(elapsed);
 			winImmune = carCollide();
@@ -680,7 +695,7 @@ class PlayState extends FlxState
 			}
 			winscreen.reset(400 - (winscreen.width / 2), uiCamera.scroll.y + 238);
 			winText.text = "You made it in " + Math.round(currentTime.elapsedTime * 100) / 100 + " Seconds!";
-			winText.reset(220, uiCamera.scroll.y + 300);
+			winText.reset(220, uiCamera.scroll.y + 380);
 			winText.size = 20;
 			restartButton.reset(218, 514);
 			menuButton.reset(506, 514);
@@ -689,7 +704,7 @@ class PlayState extends FlxState
 			confetti.start(true);
 		}
 		winscreen.y = uiCamera.scroll.y + 238;
-		winText.y = uiCamera.scroll.y + 330;
+		winText.y = uiCamera.scroll.y + 380;
 		confetti.x = 400;
 		confetti.y = uiCamera.scroll.y + 450;
 	}
@@ -864,7 +879,7 @@ class PlayState extends FlxState
 			PauseTheme.time = MainTheme.time;
 			isLose = true;
 			losescreen.reset(400 - (winscreen.width / 2), uiCamera.scroll.y + 238);
-			loseText.reset(220, uiCamera.scroll.y + 300);
+			loseText.reset(220, uiCamera.scroll.y + 380);
 			loseText.size = 20;
 			loseText.text = "You made it " + (-1 * Math.round(player.y / WINDIST * 100)) + "% of the way!";
 			restartButton.reset(218, 514);

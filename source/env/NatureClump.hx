@@ -32,7 +32,9 @@ class NatureClump implements env.EnvItem extends flixel.FlxSprite
 		"largeBushLeft",
 		"smallBushRight",
 		"mediumBushRight",
-		"largeBushRight"
+		"largeBushRight",
+		"largeRiverRight",
+		"largeRiverLeft",
 	];
 
 	public function new(?envItemType:String, ?exclusivity:Array<String>)
@@ -87,10 +89,15 @@ class NatureClump implements env.EnvItem extends flixel.FlxSprite
 			this.alwaysLeft = true;
 			this.fixedX = 0;
 		}
-		else if (envItemType.indexOf("Right") > 0)
+		else if (envItemType.indexOf("Right") > 0 && envItemType.indexOf("Bush") > 0)
 		{
 			this.alwaysRight = true;
 			this.fixedX = FlxG.width - 82;
+		}
+		else if (envItemType.indexOf("Right") > 0 && envItemType.indexOf("River") > 0)
+		{
+			this.alwaysRight = true;
+			this.fixedX = FlxG.width - 150;
 		}
 	}
 
