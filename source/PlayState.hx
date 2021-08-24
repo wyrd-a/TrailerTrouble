@@ -54,7 +54,7 @@ class PlayState extends FlxState
 	var trailer:Trailer;
 
 	// Game winning stuff
-	var WINDIST:Float = 1000;
+	var WINDIST:Float = 100000;
 
 	var isWin:Bool = false;
 	var winCounter:Float = 0;
