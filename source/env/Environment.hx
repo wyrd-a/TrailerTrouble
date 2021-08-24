@@ -24,7 +24,7 @@ class Environment
 
 	// Spawn chance variables
 	public var envItemTypes = ["RoadSign", "CrossTrack", "CrossRoad", "NatureClump"];
-	// public var envItemTypes = ["RoadSign", "NatureClump"];
+	// public var envItemTypes = ["RoadSign",];
 	public var SPAWN_ATTEMPTS = 3;
 	public var GLOBAL_SPAWN_CHANCE = 0.25;
 

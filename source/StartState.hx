@@ -66,29 +66,29 @@ class StartState extends FlxState
 		title.x = 400 - (title.width / 2);
 		add(title);
 
-		startButton = new FlxButton(350, 200, "", clickStart);
+		startButton = new FlxButton(350, 225, "", clickStart);
 		startButton.loadGraphic("assets/images/STARTBUTTON.png", true, 254, 63);
 		add(startButton);
 		startButton.x = 400 - (startButton.width / 2);
 
-		optionButton = new FlxButton(350, 300, "", openOptions);
+		optionButton = new FlxButton(350, 325, "", openOptions);
 		optionButton.loadGraphic("assets/images/OPTIONBUTTON.png", true, 254, 63);
 		add(optionButton);
 		optionButton.x = 400 - (optionButton.width / 2);
 
 		// Options Screen popup
-		optionsScreen = new FlxSprite(0, 150);
+		optionsScreen = new FlxSprite(0, 175);
 		optionsScreen.loadGraphic(AssetPaths.OptionsMainMenu__png);
 		optionsScreen.x = 400 - (optionsScreen.width / 2);
 		add(optionsScreen);
 		optionsScreen.kill();
 
 		// Options screen buttons
-		fullscreenButton = new FlxButton(472, 212, "", makeFullScreen);
+		fullscreenButton = new FlxButton(472, 237, "", makeFullScreen);
 		fullscreenButton.loadGraphic(AssetPaths.uncheckedFS__png);
-		sfxButton = new FlxButton(472, 261, "", muteSFX);
+		sfxButton = new FlxButton(472, 286, "", muteSFX);
 		sfxButton.loadGraphic(AssetPaths.uncheckedSFX__png);
-		musicButton = new FlxButton(472, 308, "", muteMusic);
+		musicButton = new FlxButton(472, 333, "", muteMusic);
 		musicButton.loadGraphic(AssetPaths.uncheckedMusic__png);
 		add(fullscreenButton);
 		add(musicButton);
@@ -97,7 +97,7 @@ class StartState extends FlxState
 		musicButton.kill();
 		sfxButton.kill();
 
-		backButton = new FlxButton(0, 390, "", backCommand);
+		backButton = new FlxButton(0, 415, "", backCommand);
 		backButton.loadGraphic(AssetPaths.backButton__png, true, 160, 50);
 		backButton.x = 400 - (backButton.width / 2);
 		add(backButton);
@@ -164,7 +164,7 @@ class StartState extends FlxState
 		pushButton();
 		startButton.kill();
 		optionButton.kill();
-		optionsScreen.reset(400 - (optionsScreen.width / 2), 150);
+		optionsScreen.reset(400 - (optionsScreen.width / 2), 175);
 		fullscreenButton.revive();
 		musicButton.revive();
 		sfxButton.revive();

@@ -25,33 +25,40 @@ class RoadSign implements env.EnvItem extends flixel.FlxSprite
 	// Sign specific vars
 	public var envItemType:String;
 
-	public static var signTypes:Array<String> = [
-		"89Sign",
-		"95Sign",
-		"overheadTripleSign",
-		"rightOverheadSign",
-		"simpleSign",
-		"speedLimitSign",
+	public static var rightMountedSigns = [
+		"2fort",
+		"archbtw",
+		"centralia",
+		"forks",
+		"luckyville",
+		"upstream",
+		"warnerbradford",
+		"whereami"
 	];
 
-	public function new(?envItemType:String, ?exclusivity:Array<String>)
+	public static var eitherMountedSigns = [
+		"89Sign",
+		"95Sign",
+		"speedLimitSign",
+		"clickandflick",
+		"upstream2",
+		"gofaster",
+		"lookatyourscreen",
+		"bikespipes",
+		"hiii"
+	];
+
+	public static var centerMountedSigns = ["chocolate", "tictactoe", "howsitgoing", "lanelabels", "magnets"];
+
+	public var signTypes:Array<String>;
+
+	public function new(?envItemType:String)
 	{
-		var availableTypes:Array<String>;
-		if (exclusivity != null)
-		{
-			availableTypes = signTypes.filter((exclusiveEnvItemType:String) ->
-			{
-				return !exclusivity.contains(exclusiveEnvItemType);
-			});
-		}
-		else
-		{
-			availableTypes = signTypes;
-		}
+		this.signTypes = [].concat(rightMountedSigns).concat(eitherMountedSigns).concat(centerMountedSigns);
 
 		if (envItemType == null)
 		{
-			this.envItemType = availableTypes[utils.Math.randRange(0, availableTypes.length - 1)];
+			this.envItemType = signTypes[utils.Math.randRange(0, signTypes.length - 1)];
 			initEnvItem(this.envItemType);
 		}
 		else if (!signTypes.contains(envItemType))
@@ -85,17 +92,17 @@ class RoadSign implements env.EnvItem extends flixel.FlxSprite
 		{
 			this.alwaysRight = true;
 		}
-		else if (envItemType == "overheadTripleSign")
+		else if (centerMountedSigns.contains(envItemType))
 		{
 			this.alwaysCentered = true;
 			this.fixedX = 125;
 		}
-		else if (envItemType == "rightOverheadSign")
+		else if (rightMountedSigns.contains(envItemType))
 		{
 			this.alwaysRight = true;
 			this.fixedX = 465;
 		}
-		else if (envItemType == "simpleSign" || envItemType == "testSign" || envItemType == "speedLimitSign")
+		else if (eitherMountedSigns.contains(envItemType))
 		{
 			this.eitherSide = true;
 		}
@@ -103,21 +110,7 @@ class RoadSign implements env.EnvItem extends flixel.FlxSprite
 
 	private function initSpawnChance(envItemType:String)
 	{
-		if (envItemType == "89Sign" || envItemType == "95Sign")
-		{
-			this.spawnChance = 0.1;
-		}
-		else if (envItemType == "simpleSign")
-		{
-			this.spawnChance = 0.25;
-		}
-		else if (envItemType == "overHeadTripleSign" || envItemType == "rightOverheadSign")
-		{
-			this.spawnChance = 0.05;
-		}
-		else
-		{
-			this.spawnChance = 0.1;
-		}
+		// Global spawn chance
+		this.spawnChance = 0.1;
 	}
 }
